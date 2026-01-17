@@ -1,0 +1,8 @@
+definition_file: "configs/def_sae_j1849.json"
+output_dir: "output/sae_test_batch_4_44_32"
+sample_rate: 44100
+bit_depth: 24
+num_iterations: 3
+duration_s: 10.0
+oversampling: 32 # almost 32 is advised for minimal aliasing
+seed: 42
