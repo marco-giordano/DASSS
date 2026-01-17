@@ -27,7 +27,9 @@ def main():
     # Initialize Synthesizer
     synth = SirenSynthesizer(
         sample_rate=batch_config.sample_rate, 
-        oversample=batch_config.oversampling
+        oversample=batch_config.oversampling,
+        use_metal=batch_config.use_metal,
+        realism_config=batch_config.realism
     )
     
     metadata_list = []
@@ -39,7 +41,7 @@ def main():
         
         for i in range(batch_config.num_iterations):
             # Sample parameters
-            params = sample_parameters(mode_params)
+            params = sample_parameters(mode_params, min_separation=batch_config.min_frequency_separation)
             
             # Duration from config
             duration_s = batch_config.duration_s
@@ -68,6 +70,17 @@ def main():
             # For Hi-Lo, we need f1 and f2. 
             # Let's assume f_min is Low and f_max is High for the specific instance.
             
+            # Minor Third Forcing
+            if batch_config.force_minor_third and ("hi-lo" in mode_name.lower() or "two-tone" in mode_name.lower()):
+                # Calculate Minor Third (3 semitones)
+                # Ratio = 2^(3/12) ~= 1.189207
+                # We enforce f2 = f1 * Ratio
+                # Use f_min as base
+                f_base = params['frequency_min']
+                f_minor = f_base * (2 ** (3/12))
+                params['frequency_max'] = f_minor
+                print(f"    [Forced Minor Third] {f_base:.1f}Hz -> {f_minor:.1f}Hz")
+
             audio = None
             if "hi-lo" in mode_name.lower() or "two-tone" in mode_name.lower():
                  audio = synth.generate_two_tone(
@@ -79,13 +92,19 @@ def main():
                     duty_cycle=params['duty_cycle']
                 )
             else:
+                # Determine siren type for realism
+                # Wail = Mechanical (usually)
+                # Others = Electronic
+                siren_type = 'mechanical' if 'wail' in mode_name.lower() else 'electronic'
+                
                 audio = synth.generate_siren_cycle(
                     f_min=params['frequency_min'], 
                     f_max=params['frequency_max'], 
                     period=params['period'], 
                     waveform=params['waveform'], 
                     duration_s=duration_s,
-                    duty_cycle=params['duty_cycle']
+                    duty_cycle=params['duty_cycle'],
+                    siren_type=siren_type
                 )
             
             # Filename - Simplified without timestamp

@@ -1,8 +1,27 @@
 definition_file: "configs/def_sae_j1849.json"
-output_dir: "output/sae_test_batch_4_44_32"
+output_dir: "output/sae_test_batch_8_44_2_realism"
 sample_rate: 44100
 bit_depth: 24
 num_iterations: 3
 duration_s: 10.0
-oversampling: 32 # almost 32 is advised for minimal aliasing
-seed: 42
+oversampling: 2 # 1 = off. Keep it low to avoid artifacts.
+use_metal: true # Use Metal (MPS) acceleration if available
+force_minor_third: true # Force minor third ratio between f1 and f2 for hi-lo and two-tone modes
+min_frequency_separation: 1.5 # min ratio between f_max and f_min
+seed: 2018
+
+# Realism parameters
+realism:
+  analog_saturation: true
+  horn_filter: true
+  oscillator_jitter: true
+  mechanical_asymmetry: true
+  # Mechanical Profile Settings
+  mechanical_rise_ratio: 0.2     # Short rise (20% of period)
+  mechanical_rise_exponent: 0.5  # Concave rise (Fast start)
+  mechanical_fall_exponent: 2.0  # Convex fall (Slow start decel)
+  jitter_amount: 0.12            # Drift intensity
+  
+  # Variable Wail (Randomize f_max per cycle)
+  variable_wail: true
+  wail_variation_magnitude: 0.2

@@ -32,6 +32,25 @@ class SirenDefinition(BaseModel):
     # Map from siren type name (e.g., "wail", "yelp") to its parameters
     modes: Dict[str, SirenModeParams]
 
+    seed: Optional[int] = None
+
+class RealismConfig(BaseModel):
+    analog_saturation: bool = Field(True, description="Enable soft-clipping saturation")
+    saturation_gain: float = Field(10.0, description="Input gain for saturation (tanh)")
+    oscillator_jitter: bool = Field(True, description="Enable simulated voltage drift")
+    jitter_amount: float = Field(0.01, description="Amount of jitter noise")
+    horn_filter: bool = Field(True, description="Enable speaker frequency response simulation")
+    
+    # Mechanical Asymmetry Settings
+    mechanical_asymmetry: bool = Field(True, description="Enable asymmetric envelope for mechanical sirens")
+    mechanical_rise_ratio: float = Field(0.2, description="Proportion of period spent rising (0.0-1.0)")
+    mechanical_rise_exponent: float = Field(0.5, description="Shape of rise (0.5=concave, 1.0=linear, 2.0=convex)")
+    mechanical_fall_exponent: float = Field(2.0, description="Shape of fall (0.5=concave, 1.0=linear, 2.0=convex)")
+    
+    # Variable Wail (Randomize f_max per cycle)
+    variable_wail: bool = Field(True, description="Vary f_max and period for each wail cycle")
+    wail_variation_magnitude: float = Field(0.2, description="Magnitude of f_max variation (0.0-1.0)")
+
 class BatchConfig(BaseModel):
     definition_file: str = Field(..., description="Path to the siren definition JSON file")
     output_dir: str = Field("./output", description="Directory to save generated samples")
@@ -40,6 +59,12 @@ class BatchConfig(BaseModel):
     num_iterations: int = Field(1, description="Number of samples to generate per siren mode")
     duration_s: float = Field(10.0, description="Duration in seconds for each sample")
     oversampling: int = Field(8, description="Oversampling factor for anti-aliasing (1 = off)")
+    use_metal: bool = Field(False, description="Use Metal (MPS) acceleration if available")
+    force_minor_third: bool = Field(False, description="Force Hi-Lo sirens to use a Minor Third interval")
+    min_frequency_separation: float = Field(1.2, description="Minimum ratio between f_max and f_min (f_max >= k * f_min)")
+    
+    # Realism Settings
+    realism: RealismConfig = Field(default_factory=RealismConfig, description="Algorithmic realism settings")
     
     # Global overrides or settings
     seed: Optional[int] = None
