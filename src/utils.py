@@ -32,88 +32,67 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
     Randomly samples parameters from the defined ranges using uniform distribution.
     Enforces f_max >= f_min * min_separation.
     """
-    freq_min_rng = params.frequency_range.min
-    freq_max_rng = params.frequency_range.max
-    # Ensure min < max
-    if freq_min_rng > freq_max_rng:
-        freq_min_rng, freq_max_rng = freq_max_rng, freq_min_rng
+    # Rejection Sampling Loop
+    # We try up to N times to generate compliant parameters.
+    # If we fail, we fall back to safe defaults or error out.
+    max_retries = 100
+    
+    freq_min_limit = params.frequency_range.min
+    freq_max_limit = params.frequency_range.max
+    # Period limits
+    p_min_limit = params.period_range.min
+    p_max_limit = params.period_range.max
+    
+    for _ in range(max_retries):
+        # 1. Sample f_min
+        # Constraint: f_min must leave room for f_max (f_max >= f_min * min_sep)
+        # Max valid f_min = freq_max_limit / min_separation
+        upper_fmin_bound = min(freq_max_limit, freq_max_limit / max(1.0, min_separation))
         
-    # Sample f_min from the WHOLE allowed range first?
-    # Or sample f_min such that a valid f_max exists?
-    # Valid f_max must be >= f_min * sep.
-    # So max possible f_min is freq_max_rng / sep.
-    
-    # Constraint: f_min * sep <= freq_max_rng
-    limit_f_min = freq_max_rng / max(1.0, min_separation)
-    
-    valid_range_min = min(freq_min_rng, limit_f_min)
-    # If the range is invalid (limit < freq_min_rng), we have a problem definition.
-    # We'll just clamp.
-    actual_limit_f_min = max(valid_range_min, limit_f_min)
-    if actual_limit_f_min < freq_min_rng:
-         # This means even the lowest f_min * sep > max_rng. 
-         # Cannot satisfy. Just sample normally and warn? Or try best effort.
-         # Let's pivot: Sample f_min normally. Then trying to find f_max.
-         pass
-
-    # Simplified Approach:
-    # 1. Sample f_min from [freq_min_rng, freq_max_rng]
-    # 2. Calculate min_f_max = f_min * sep
-    # 3. If min_f_max > freq_max_rng:
-    #    Retry f_min? Or clamp constraint?
-    #    User says "taking f_min as a pivot".
-    #    So we stick with sampled f_min.
-    #    We must choose f_max in [min_f_max, freq_max_rng].
-    #    If min_f_max > freq_max_rng, we can't satisfy both range and separation.
-    #    Separation usually wins for realism? Or Range wins for compliance?
-    #    Let's assume Definition is broad enough.
-    
-    # Let's try to enable valid sampling by restricting f_min if possible.
-    effective_max_fmin = freq_max_rng / min_separation
-    
-    # Sample f_min
-    # Cap f_min sampling to ensure room for f_max
-    sampling_max_fmin = min(freq_max_rng, effective_max_fmin)
-    if sampling_max_fmin < freq_min_rng:
-        # Range is too tight or sep too large. 
-        # Fallback: sample freely
-        f_min = random.uniform(freq_min_rng, freq_max_rng)
-    else:
-        f_min = random.uniform(freq_min_rng, sampling_max_fmin)
+        # If range is impossible, we can't solve it.
+        if upper_fmin_bound < freq_min_limit:
+            # Definition is tighter than separation requirements.
+            # Pivot constraint: separation applies?
+            # We'll just sample in range and hope checking catches it.
+            f_min = random.uniform(freq_min_limit, freq_max_limit)
+        else:
+            f_min = random.uniform(freq_min_limit, upper_fmin_bound)
+            
+        # 2. Sample f_max
+        # Must be >= f_min * separation
+        min_f_max = f_min * min_separation
         
-    # Calculate required minimum for f_max
-    req_f_max_low = f_min * min_separation
-    
-    # Allowed range for f_max is [max(req_f_max_low, freq_min_rng), freq_max_rng]
-    # (Since f_max must also be in [min, max] typically, or just > f_min?)
-    # "choosing f_max in the range between the minimum separation and the maximum provided by the definition file"
-    low_bound = max(req_f_max_low, freq_min_rng)
-    high_bound = freq_max_rng
-    
-    if low_bound > high_bound:
-        # Conflict. Separation pushes f_max outside allowed definition.
-        # Use high_bound (clamp) or low_bound (violate range)?
-        # Assume Separation is a soft "try to", but Definition is hard?
-        # User said "choosing f_max in the range between the minimum separation and the maximum".
-        # If min_sep > max, then range is empty.
-        # We will just clamp f_max to high_bound.
-        f_max = high_bound
-    else:
-        f_max = random.uniform(low_bound, high_bound)
-    
-    # Ensure min < max final check (if sep < 1.0)
-    if f_min > f_max:
-        f_min, f_max = f_max, f_min
+        # Range for f_max is [min_f_max, freq_max_limit]
+        if min_f_max > freq_max_limit:
+            # This sample of f_min is invalid (too high). Retry.
+            continue
+            
+        f_max = random.uniform(min_f_max, freq_max_limit)
         
-    # Period
-    p_min = params.period_range.min
-    p_max = params.period_range.max
-    period = random.uniform(p_min, p_max)
-    
+        # 3. Sample Period
+        period = random.uniform(p_min_limit, p_max_limit)
+        
+        # Final Verification against Definition (Redundant but requested "verified against specifications")
+        if not (freq_min_limit <= f_min <= freq_max_limit): continue
+        if not (freq_min_limit <= f_max <= freq_max_limit): continue
+        if not (p_min_limit <= period <= p_max_limit): continue
+        if f_max < f_min * min_separation: continue # Should be met by construction
+        
+        # If all good, return
+        return {
+            "frequency_min": f_min,
+            "frequency_max": f_max,
+            "period": period,
+            "waveform": params.waveform,
+            "duty_cycle": params.duty_cycle
+        }
+        
+    # If we exhausted retries, return separate fallback or raise error
+    # For robustness, we return the last attempt clamped
     return {
-        "frequency_min": f_min,
-        "frequency_max": f_max,
-        "period": period,
+        "frequency_min": freq_min_limit,
+        "frequency_max": freq_max_limit,
+        "period": p_min_limit,
         "waveform": params.waveform,
         "duty_cycle": params.duty_cycle
     }

@@ -216,10 +216,12 @@ class SirenSynthesizer:
         
         num_samples = int(duration_s * self.sample_rate)
     def _generate_variable_wail_sweep(self, duration_total: float, f_min: float, nominal_f_max: float, nominal_period: float,
-                                      rise_ratio: float, rise_exp: float, fall_exp: float) -> Union[np.ndarray, "torch.Tensor"]:
+                                      rise_ratio: float, rise_exp: float, fall_exp: float, 
+                                      limit_f_max: float = 10000.0) -> Union[np.ndarray, "torch.Tensor"]:
         """
         Generates a non-periodic sweep signal where each cycle has a random peak frequency (f_max).
         The period scales with the peak frequency (Constant Acceleration model).
+        Enforces limits.
         """
         target_samples = int(duration_total * self.sample_rate)
         
@@ -244,7 +246,19 @@ class SirenSynthesizer:
             # But kept > f_min
             var = (np.random.random() * 2 - 1) * mag
             f_peak = nominal_f_max * (1.0 + var)
-            if f_peak <= f_min: f_peak = f_min + 10.0
+            
+            # --- CONSTRAINTS & CLAMPING (Fixes "Steady f1" artifact) ---
+            
+            # Constraint 1: Absolute Max Limit Compliance
+            if f_peak > limit_f_max:
+                f_peak = limit_f_max
+                
+            # Constraint 2: Maintain sweep. 
+            # If f_peak drops too close to f_min, we get a flat cycle (steady f1).
+            # Enforce reasonable delta. E.g. at least 10% of nominal delta or 50Hz.
+            min_valid_peak = f_min + (0.1 * delta_nominal) 
+            if f_peak < min_valid_peak:
+                f_peak = min_valid_peak
             
             # Scale period
             # Model: Constant acceleration/deceleration. Time to reach delta is proportional to delta.
@@ -253,7 +267,8 @@ class SirenSynthesizer:
             scale_factor = delta / delta_nominal
             
             # Constrain scale factor to avoid extreme periods?
-            scale_factor = np.clip(scale_factor, 0.5, 2.0)
+            # With clamping above, delta shouldn't be zero.
+            scale_factor = np.clip(scale_factor, 0.2, 5.0)
             
             cycle_period = nominal_period * scale_factor
             samples_in_cycle = int(cycle_period * self.sample_rate)
@@ -261,8 +276,7 @@ class SirenSynthesizer:
             # Don't exceed remaining too much? 
             # Actually sirens cut off anywhere.
             
-            # Generate one cycle envelope (0->1->0)
-            # Use shared logic but for specific t
+            # Generate one cycle envelope (0->1->0) using pre-calc logic or just in-line
             if self.use_metal:
                 t_cycle = torch.linspace(0, 1, samples_in_cycle, device=self.device)
             else:
@@ -293,12 +307,6 @@ class SirenSynthesizer:
                     env[fall_mask] = np.power(t_fall, fall_exp)
             
             # Convert Envelope (0-1) to Freq (f_min - f_peak)
-            # freq_chunk = f_min + (f_peak - f_min) * env
-            # Actually, generator expects sweep_signal (0-1) and scales by (f_max - f_min) later?
-            # But here f_max is changing!
-            # So this function should return `inst_freq` directly.
-            freq_chunk = f_min + (f_peak - f_min) * env
-            # env is 0..1. 
             freq_chunk = f_min + (f_peak - f_min) * env
             
             chunks_freq.append(freq_chunk)
@@ -368,7 +376,8 @@ class SirenSynthesizer:
                              waveform: Waveform, 
                              duration_s: float,
                              duty_cycle: float = 0.5,
-                             siren_type: Literal['electronic', 'mechanical'] = 'electronic') -> np.ndarray:
+                             siren_type: Literal['electronic', 'mechanical'] = 'electronic',
+                             max_freq_limit: float = 20000.0) -> np.ndarray:
         
         num_samples = int(duration_s * self.sample_rate)
         lfo_freq = 1.0 / period
@@ -391,7 +400,8 @@ class SirenSynthesizer:
                     nominal_period=period,
                     rise_ratio=self.realism.mechanical_rise_ratio,
                     rise_exp=self.realism.mechanical_rise_exponent,
-                    fall_exp=self.realism.mechanical_fall_exponent
+                    fall_exp=self.realism.mechanical_fall_exponent,
+                    limit_f_max=max_freq_limit
                 )
                 # sweep_signal is implicit in inst_freq
             else:
