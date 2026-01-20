@@ -62,6 +62,7 @@ class BatchConfig(BaseModel):
     use_metal: bool = Field(False, description="Use Metal (MPS) acceleration if available")
     force_minor_third: bool = Field(False, description="Force Hi-Lo sirens to use a Minor Third interval")
     min_frequency_separation: float = Field(1.2, description="Minimum ratio between f_max and f_min (f_max >= k * f_min)")
+    generate_spectrograms: bool = Field(False, description="Generate spectrogram images for each output file")
     
     # Realism Settings
     realism: RealismConfig = Field(default_factory=RealismConfig, description="Algorithmic realism settings")

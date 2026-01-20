@@ -1,6 +1,9 @@
 import json
 import yaml
 import random
+import numpy as np
+import scipy.signal as signal
+import matplotlib.pyplot as plt
 from typing import Dict, Any, Union, Tuple
 from pathlib import Path
 from .schemas import SirenDefinition, BatchConfig, SirenModeParams
@@ -96,3 +99,29 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
         "waveform": params.waveform,
         "duty_cycle": params.duty_cycle
     }
+
+def save_spectrogram(audio_data: np.ndarray, sample_rate: int, output_path: str, title: str = "Spectrogram"):
+    """
+    Generates and saves a spectrogram plot for the given audio data.
+    """
+    if len(audio_data.shape) > 1:
+        y = audio_data[:, 0] # mono
+    else:
+        y = audio_data
+        
+    # Compute Spectrogram
+    f, t, Sxx = signal.spectrogram(y, sample_rate, nperseg=1024, noverlap=512)
+    
+    # Plot
+    plt.figure(figsize=(10, 6))
+    plt.pcolormesh(t, f, 10 * np.log10(Sxx + 1e-10), shading='gouraud')
+    plt.ylabel('Frequency [Hz]')
+    plt.xlabel('Time [sec]')
+    plt.title(f'{title}')
+    plt.colorbar(label='Intensity [dB]')
+    plt.ylim(0, sample_rate/2)
+    
+    try:
+        plt.savefig(output_path)
+    finally:
+        plt.close()

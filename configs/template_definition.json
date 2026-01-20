@@ -1,0 +1,33 @@
+{
+    "standard": "TEMPLATE_STANDARD_NAME",
+    "region": "TEMPLATE_REGION",
+    "seed": 42,
+    "modes": {
+        "example_mode_name": {
+            "description": "Description of the siren mode (e.g., 'Slow Wail')",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "another_mode": {
+            "description": "Another mode example",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 0.5,
+                "max": 1.0
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        }
+    }
+}

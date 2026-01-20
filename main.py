@@ -2,8 +2,9 @@ import argparse
 import os
 import soundfile as sf
 import time
+import shutil
 from pathlib import Path
-from src.utils import load_json_definition, load_yaml_config, sample_parameters, save_metadata
+from src.utils import load_json_definition, load_yaml_config, sample_parameters, save_metadata, save_spectrogram
 from src.generator import SirenSynthesizer
 from src.schemas import GenerationMetadata, Waveform
 
@@ -32,6 +33,27 @@ def main():
         realism_config=batch_config.realism
     )
     
+    
+    # 1. Backup Config File
+    # 1. Backup Config File
+    try:
+        shutil.copy(args.config, output_dir / Path(args.config).name)
+        print(f"Backed up config to {output_dir / Path(args.config).name}")
+    except Exception as e:
+        print(f"Warning: Failed to backup config file: {e}")
+        
+    # 2. Backup Definition File (JSON)
+    try:
+        shutil.copy(batch_config.definition_file, output_dir / Path(batch_config.definition_file).name)
+        print(f"Backed up definition to {output_dir / Path(batch_config.definition_file).name}")
+    except Exception as e:
+        print(f"Warning: Failed to backup definition file: {e}")
+
+    # 2. Prepare Spectrogram Folder
+    spectrogram_dir = output_dir / "spectrograms"
+    if batch_config.generate_spectrograms:
+        spectrogram_dir.mkdir(parents=True, exist_ok=True)
+
     metadata_list = []
     
     print(f"Starting generation loop for standard: {siren_def.standard}...")
@@ -40,8 +62,16 @@ def main():
         print(f"  Generating {batch_config.num_iterations} samples for mode: {mode_name}")
         
         for i in range(batch_config.num_iterations):
+            # Constraint Logic:
+            # If force_minor_third is active for Hi-Lo, we shouldn't enforce the large min_separation
+            # because the ratio is fixed (approx 1.19) and might be smaller than min_separation (e.g. 1.5).
+            # Also, standard Separation (1.5) might exceed Hi-Lo defined range (450-600).
+            current_separation = batch_config.min_frequency_separation
+            if batch_config.force_minor_third and ("hi-lo" in mode_name.lower() or "two-tone" in mode_name.lower()):
+                current_separation = 1.0 # Relax constraint, let minor third logic handle it later
+            
             # Sample parameters
-            params = sample_parameters(mode_params, min_separation=batch_config.min_frequency_separation)
+            params = sample_parameters(mode_params, min_separation=current_separation)
             
             # Duration from config
             duration_s = batch_config.duration_s
@@ -113,7 +143,19 @@ def main():
             filepath = output_dir / filename
             
             # Save Audio
-            sf.write(filepath, audio, batch_config.sample_rate) # Soundfile handles float32 -> 16/24 bit automatically or we specify subtype
+            sf.write(filepath, audio, batch_config.sample_rate, subtype='PCM_24')
+            print(f"    Saved: {filepath}")
+
+            # Save Spectrogram if enabled
+            if batch_config.generate_spectrograms:
+                spec_filename = f"{filename}.png"
+                spec_path = spectrogram_dir / spec_filename
+                save_spectrogram(
+                    audio_data=audio, 
+                    sample_rate=batch_config.sample_rate, 
+                    output_path=str(spec_path),
+                    title=f"{mode_name} - {filename}"
+                )
             
             # Add to Metadata
             meta = GenerationMetadata(

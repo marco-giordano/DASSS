@@ -1,14 +1,15 @@
 definition_file: "configs/def_sae_j1849.json"
-output_dir: "output/sae_test_batch_9_44_2_realism"
+output_dir: "output/sae_test_batch_9_44_2_realism_spectrograms"
 sample_rate: 44100
 bit_depth: 24
-num_iterations: 3
-duration_s: 10.0
+num_iterations: 3 # Number of samples to generate per siren mode in the batch
+duration_s: 10.0 # Duration in seconds for each sample
 oversampling: 2 # 1 = off. Keep it low to avoid artifacts.
 use_metal: true # Use Metal (MPS) acceleration if available
 force_minor_third: true # Force minor third ratio between f1 and f2 for hi-lo and two-tone modes
 min_frequency_separation: 1.5 # min ratio between f1 and f2
-seed: 2018
+generate_spectrograms: true # Generate spectrogram images for each output file
+seed: 42
 
 # Realism parameters
 realism:
@@ -20,7 +21,7 @@ realism:
   mechanical_rise_ratio: 0.2     # Short rise (20% of period)
   mechanical_rise_exponent: 0.5  # Concave rise (Fast start)
   mechanical_fall_exponent: 2.0  # Convex fall (Slow start decel)
-  jitter_amount: 0.12            # Drift intensity (0.0-1.0)
+  jitter_amount: 0.1            # Drift intensity (0.0-1.0)
   
   # Variable Wail (Randomize f2 per cycle)
   variable_wail: true # Vary f2 for each wail cycle

@@ -215,15 +215,15 @@ class SirenSynthesizer:
                              siren_type: Literal['electronic', 'mechanical'] = 'electronic') -> np.ndarray:
         
         num_samples = int(duration_s * self.sample_rate)
-    def _generate_variable_wail_sweep(self, duration_total: float, f_min: float, nominal_f_max: float, nominal_period: float,
+    def _generate_variable_wail_sweep(self, min_duration: float, f_min: float, nominal_f_max: float, nominal_period: float,
                                       rise_ratio: float, rise_exp: float, fall_exp: float, 
                                       limit_f_max: float = 10000.0) -> Union[np.ndarray, "torch.Tensor"]:
         """
         Generates a non-periodic sweep signal where each cycle has a random peak frequency (f_max).
         The period scales with the peak frequency (Constant Acceleration model).
-        Enforces limits.
+        Ensures the generation lasts at least min_duration, finishing the last complete cycle.
         """
-        target_samples = int(duration_total * self.sample_rate)
+        target_samples = int(min_duration * self.sample_rate)
         
         # We need to construct the full array sample by sample or chunk by chunk
         # Since loop in python is slow, we aim for chunk-based.
@@ -318,8 +318,8 @@ class SirenSynthesizer:
         else:
             full_freq = np.concatenate(chunks_freq)
             
-        # Trim to exact duration
-        return full_freq[:target_samples]
+        # Return full cycles (do not trim to target_samples)
+        return full_freq
 
     def _generate_mechanical_envelope(self, t: Union[np.ndarray, "torch.Tensor"], period: float, 
                                       rise_ratio: float, rise_exp: float, fall_exp: float) -> Union[np.ndarray, "torch.Tensor"]:
@@ -379,32 +379,46 @@ class SirenSynthesizer:
                              siren_type: Literal['electronic', 'mechanical'] = 'electronic',
                              max_freq_limit: float = 20000.0) -> np.ndarray:
         
-        num_samples = int(duration_s * self.sample_rate)
-        lfo_freq = 1.0 / period
-        
-        # --- TIME VECTOR ---
-        if self.use_metal:
-            t = torch.arange(0, num_samples, device=self.device) * (duration_s / num_samples)
-        else:
-            t = np.linspace(0, duration_s, num_samples, endpoint=False)
-                        
-        # --- MODULATOR ---
-        # --- MODULATOR ---
-        if siren_type == 'mechanical' and self.realism.mechanical_asymmetry:
-            if self.realism.variable_wail:
-                # Variable Wail: Generates full Frequency Array directly
-                inst_freq = self._generate_variable_wail_sweep(
-                    duration_total=duration_s,
-                    f_min=f_min,
-                    nominal_f_max=f_max,
-                    nominal_period=period,
-                    rise_ratio=self.realism.mechanical_rise_ratio,
-                    rise_exp=self.realism.mechanical_rise_exponent,
-                    fall_exp=self.realism.mechanical_fall_exponent,
-                    limit_f_max=max_freq_limit
-                )
-                # sweep_signal is implicit in inst_freq
+        # --- DURATION ADJUSTMENT (Complete Cycle) ---
+        if siren_type == 'mechanical' and self.realism.mechanical_asymmetry and self.realism.variable_wail:
+            # For variable wail, we generate first to determine duration
+            inst_freq = self._generate_variable_wail_sweep(
+                min_duration=duration_s,
+                f_min=f_min,
+                nominal_f_max=f_max,
+                nominal_period=period,
+                rise_ratio=self.realism.mechanical_rise_ratio,
+                rise_exp=self.realism.mechanical_rise_exponent,
+                fall_exp=self.realism.mechanical_fall_exponent,
+                limit_f_max=max_freq_limit
+            )
+            
+            # Update Dimensions based on actual generation
+            num_samples = len(inst_freq)
+            actual_duration = num_samples / self.sample_rate
+            
+            # Regenerate Time Vector for Phase Integration
+            if self.use_metal:
+                t = torch.arange(0, num_samples, device=self.device) * (1.0 / self.sample_rate)
             else:
+                t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+                
+        else:
+            # Standard Periodic (Electronic or Fixed Mechanical)
+            # Adjust duration to full cycles
+            num_cycles = np.ceil(duration_s / period)
+            actual_duration = num_cycles * period
+            num_samples = int(actual_duration * self.sample_rate)
+            lfo_freq = 1.0 / period
+            
+            # Generate Time Vector
+            if self.use_metal:
+                t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+            else:
+                t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+
+            # --- MODULATOR ---
+            if siren_type == 'mechanical' and self.realism.mechanical_asymmetry:
                 # Standard Periodic Asymmetric
                 sweep_signal = self._generate_mechanical_envelope(
                     t, period, 
@@ -413,23 +427,26 @@ class SirenSynthesizer:
                     fall_exp=self.realism.mechanical_fall_exponent
                 )
                 inst_freq = f_min + (f_max - f_min) * sweep_signal
-        else:
-            # Electronic Linear Sweep (Triangle)
-            # 0.5 * (1 + sawtooth)
-            if self.use_metal:
-                phase_lfo = 2 * np.pi * lfo_freq * t
-                p_norm = (phase_lfo / (2 * np.pi)) % 1
-                saw = 2 * p_norm - 1
-                tri = 2 * torch.abs(saw) - 1 
-                sweep_signal = 0.5 * (1 + tri)
             else:
-                sweep_signal = 0.5 * (1 + signal.sawtooth(2 * np.pi * lfo_freq * t, width=0.5))
-            
-            inst_freq = f_min + (f_max - f_min) * sweep_signal
+                # Electronic Linear Sweep (Triangle)
+                if self.use_metal:
+                    phase_lfo = 2 * np.pi * lfo_freq * t
+                    p_norm = (phase_lfo / (2 * np.pi)) % 1
+                    saw = 2 * p_norm - 1
+                    tri = 2 * torch.abs(saw) - 1 
+                    sweep_signal = 0.5 * (1 + tri)
+                else:
+                    sweep_signal = 0.5 * (1 + signal.sawtooth(2 * np.pi * lfo_freq * t, width=0.5))
+                
+                inst_freq = f_min + (f_max - f_min) * sweep_signal
         
-        # Add Jitter
+        # Add Jitter (Must match new num_samples)
         jitter = self._add_oscillator_jitter(num_samples)
-        inst_freq += jitter
+        if self.use_metal:
+             # jitter is already tensor if metal
+             inst_freq = inst_freq + jitter
+        else:
+             inst_freq = inst_freq + jitter
         
         phase = self._generate_phasor(inst_freq)
         
@@ -453,12 +470,22 @@ class SirenSynthesizer:
                           duration_s: float,
                           duty_cycle: float = 0.5) -> np.ndarray:
         
-        num_samples = int(duration_s * self.sample_rate)
+        # Enforce Complete Cycles
+        # num_cycles = ceil(duration / period)
+        num_cycles = np.ceil(duration_s / period)
+        actual_duration = num_cycles * period
+        num_samples = int(actual_duration * self.sample_rate)
+        
+        # Time vector
+        if self.use_metal:
+             t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+        else:
+             t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+        
         lfo_freq = 1.0 / period
 
         if self.use_metal:
             # Metal
-            t = torch.arange(0, num_samples, device=self.device) * (duration_s / num_samples)
             # Switch
             is_high = torch.sin(2 * np.pi * lfo_freq * t) >= 0
             switching_signal = torch.where(is_high, torch.tensor(1.0, device=self.device), torch.tensor(0.0, device=self.device))
