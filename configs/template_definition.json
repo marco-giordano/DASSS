@@ -16,6 +16,7 @@
             "waveform": "square",
             "duty_cycle": 0.5
         },
+        "wail_mechanical_trapezoid": {
             "description": "Any mode containing 'wail' triggers the Mechanical Siren Logic (asymmetric envelope: slow rise, fast fall).",
             "frequency_range": {
                 "min": 600.0,
