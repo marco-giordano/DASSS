@@ -377,11 +377,13 @@ class SirenSynthesizer:
                              duration_s: float,
                              duty_cycle: float = 0.5,
                              siren_type: Literal['electronic', 'mechanical'] = 'electronic',
-                             max_freq_limit: float = 20000.0) -> np.ndarray:
+                             max_freq_limit: float = 20000.0,
+                             enforce_cycle: bool = True) -> np.ndarray:
         
         # --- DURATION ADJUSTMENT (Complete Cycle) ---
         if siren_type == 'mechanical' and self.realism.mechanical_asymmetry and self.realism.variable_wail:
             # For variable wail, we generate first to determine duration
+            # This function returns FULL cycles (potentially > duration_s)
             inst_freq = self._generate_variable_wail_sweep(
                 min_duration=duration_s,
                 f_min=f_min,
@@ -392,6 +394,11 @@ class SirenSynthesizer:
                 fall_exp=self.realism.mechanical_fall_exponent,
                 limit_f_max=max_freq_limit
             )
+            
+            if not enforce_cycle:
+                # Trim to requested duration if not enforcing complete cycles
+                target_samples = int(duration_s * self.sample_rate)
+                inst_freq = inst_freq[:target_samples]
             
             # Update Dimensions based on actual generation
             num_samples = len(inst_freq)
@@ -405,17 +412,28 @@ class SirenSynthesizer:
                 
         else:
             # Standard Periodic (Electronic or Fixed Mechanical)
-            # Adjust duration to full cycles
-            num_cycles = np.ceil(duration_s / period)
-            actual_duration = num_cycles * period
-            num_samples = int(actual_duration * self.sample_rate)
-            lfo_freq = 1.0 / period
-            
-            # Generate Time Vector
-            if self.use_metal:
-                t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+            if enforce_cycle:
+                # Adjust duration to full cycles
+                num_cycles = np.ceil(duration_s / period)
+                actual_duration = num_cycles * period
+                num_samples = int(actual_duration * self.sample_rate)
+                # Generate Time Vector for adjusted duration
+                if self.use_metal:
+                    t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+                else:
+                    t = np.linspace(0, actual_duration, num_samples, endpoint=False)
             else:
-                t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+                # Strict duration
+                actual_duration = duration_s
+                num_samples = int(actual_duration * self.sample_rate)
+                # Generate Time Vector for strict duration
+                if self.use_metal:
+                    t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+                else:
+                    t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+
+            lfo_freq = 1.0 / period
+
 
             # --- MODULATOR ---
             if siren_type == 'mechanical' and self.realism.mechanical_asymmetry:
@@ -468,13 +486,19 @@ class SirenSynthesizer:
                           period: float, 
                           waveform: Waveform, 
                           duration_s: float,
-                          duty_cycle: float = 0.5) -> np.ndarray:
+                          duty_cycle: float = 0.5,
+                          enforce_cycle: bool = True) -> np.ndarray:
         
-        # Enforce Complete Cycles
-        # num_cycles = ceil(duration / period)
-        num_cycles = np.ceil(duration_s / period)
-        actual_duration = num_cycles * period
-        num_samples = int(actual_duration * self.sample_rate)
+        if enforce_cycle:
+            # Enforce Complete Cycles
+            val = duration_s / period
+            # If accidentally perfect int, ceil gives same.
+            num_cycles = np.ceil(val)
+            actual_duration = num_cycles * period
+            num_samples = int(actual_duration * self.sample_rate)
+        else:
+            actual_duration = duration_s
+            num_samples = int(actual_duration * self.sample_rate)
         
         # Time vector
         if self.use_metal:

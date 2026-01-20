@@ -1,12 +1,12 @@
 {
-    "standard": "TEMPLATE_STANDARD_NAME",
-    "region": "TEMPLATE_REGION",
+    "standard": "TEMPLATE_WITH_EXPLANATIONS",
+    "region": "GLOBAL",
     "seed": 42,
     "modes": {
-        "example_mode_name": {
-            "description": "Description of the siren mode (e.g., 'Slow Wail')",
+        "wail_mechanical": {
+            "description": "Any mode containing 'wail' triggers the Mechanical Siren Logic (asymmetric envelope: slow rise, fast fall).",
             "frequency_range": {
-                "min": 500.0,
+                "min": 600.0,
                 "max": 1600.0
             },
             "period_range": {
@@ -16,18 +16,55 @@
             "waveform": "square",
             "duty_cycle": 0.5
         },
-        "another_mode": {
-            "description": "Another mode example",
+            "description": "Any mode containing 'wail' triggers the Mechanical Siren Logic (asymmetric envelope: slow rise, fast fall).",
             "frequency_range": {
                 "min": 600.0,
-                "max": 1200.0
+                "max": 1600.0
             },
             "period_range": {
-                "min": 0.5,
-                "max": 1.0
+                "min": 3.0,
+                "max": 5.0
             },
-            "waveform": "sine",
+            "waveform": "trapezoid",
             "duty_cycle": 0.5
+        },        
+        "yelp_electronic": {
+            "description": "Standard names (e.g. 'yelp', 'phaser') use Electronic Sweep Logic (linear/symmetric).",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.3,
+                "max": 0.5
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "hi-lo_twotone": {
+            "description": "Names containing 'hi-lo' or 'two-tone' trigger Discrete Two-Tone Logic (instant frequency switch).",
+            "frequency_range": {
+                "min": 450.0,
+                "max": 600.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "rumbler_sine": {
+            "description": "Example using 'sine' waveform. Supported waveforms: 'square', 'sine', 'sawtooth', 'triangle', 'trapezoid'.",
+            "frequency_range": {
+                "min": 180.0,
+                "max": 350.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "sine"
         }
     }
 }

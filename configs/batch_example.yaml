@@ -8,6 +8,7 @@ oversampling: 2 # 1 = off. Keep it low to avoid artifacts.
 use_metal: true # Use Metal (MPS) acceleration if available
 force_minor_third: true # Force minor third ratio between f1 and f2 for hi-lo and two-tone modes
 min_frequency_separation: 1.5 # min ratio between f1 and f2
+enforce_complete_cycle: true # Ensure audio ends after a complete cycle (extends duration if needed)
 generate_spectrograms: true # Generate spectrogram images for each output file
 seed: 42
 

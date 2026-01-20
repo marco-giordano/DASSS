@@ -1,58 +1,35 @@
 {
-    "standard": "SAE J1849",
+    "standard": "SAE J1849 / CA Title 13",
     "region": "USA",
+    "seed": 42,
     "modes": {
         "wail": {
-            "frequency_range": {
-                "min": 500,
-                "max": 1600
-            },
-            "period_range": {
-                "min": 3.0,
-                "max": 5.0
-            },
+            "description": "Standard long-range warning. Slow rise and fall.",
+            "frequency_range": { "min": 500.0, "max": 1600.0 },
+            "period_range": { "min": 3.0, "max": 5.0 },
             "waveform": "square",
-            "duty_cycle": 0.5,
-            "description": "Slow rising and falling tone"
+            "duty_cycle": 0.5
         },
         "yelp": {
-            "frequency_range": {
-                "min": 500,
-                "max": 1600
-            },
-            "period_range": {
-                "min": 0.3,
-                "max": 0.5
-            },
+            "description": "High urgency, rapid modulation for heavy traffic.",
+            "frequency_range": { "min": 500.0, "max": 1600.0 },
+            "period_range": { "min": 0.3, "max": 0.5 },
             "waveform": "square",
-            "duty_cycle": 0.5,
-            "description": "Fast rising and falling tone"
+            "duty_cycle": 0.5
         },
         "phaser": {
-            "frequency_range": {
-                "min": 500,
-                "max": 1600
-            },
-            "period_range": {
-                "min": 0.05,
-                "max": 0.2
-            },
+            "description": "Hyper-fast modulation (Piercer) for intersections.",
+            "frequency_range": { "min": 1500.0, "max": 2500.0 },
+            "period_range": { "min": 0.06, "max": 0.1 },
             "waveform": "square",
-            "duty_cycle": 0.5,
-            "description": "Very fast rising and falling tone"
+            "duty_cycle": 0.5
         },
-        "hi-lo": {
-            "frequency_range": {
-                "min": 450,
-                "max": 600
-            },
-            "period_range": {
-                "min": 0.6,
-                "max": 1.0
-            },
-            "waveform": "square",
-            "duty_cycle": 0.5,
-            "description": "Alternating high and low tones"
+        "rumbler": {
+            "description": "Low-frequency sub-harmonics for physical vibration.",
+            "frequency_range": { "min": 180.0, "max": 400.0 },
+            "period_range": { "min": 3.0, "max": 5.0 },
+            "waveform": "sine",
+            "duty_cycle": 0.5
         }
     }
 }

@@ -119,7 +119,8 @@ def main():
                     period=params['period'], 
                     waveform=params['waveform'], 
                     duration_s=duration_s,
-                    duty_cycle=params['duty_cycle']
+                    duty_cycle=params['duty_cycle'],
+                    enforce_cycle=batch_config.enforce_complete_cycle
                 )
             else:
                 # Determine siren type for realism
@@ -134,7 +135,9 @@ def main():
                     waveform=params['waveform'], 
                     duration_s=duration_s,
                     duty_cycle=params['duty_cycle'],
-                    siren_type=siren_type
+                    siren_type=siren_type,
+                    max_freq_limit=mode_params.frequency_range.max,
+                    enforce_cycle=batch_config.enforce_complete_cycle
                 )
             
             # Filename - Simplified without timestamp
@@ -158,6 +161,9 @@ def main():
                 )
             
             # Add to Metadata
+            # Calculate actual duration from generated audio
+            actual_duration = len(audio) / batch_config.sample_rate
+            
             meta = GenerationMetadata(
                 filename=filename,
                 standard=siren_def.standard,
@@ -165,9 +171,9 @@ def main():
                 frequency_min=params['frequency_min'],
                 frequency_max=params['frequency_max'],
                 period=params['period'],
-                waveform=params['waveform'].value,
+                waveform=params['waveform'].value if hasattr(params['waveform'], 'value') else params['waveform'],
                 sample_rate=batch_config.sample_rate,
-                duration_s=duration_s
+                duration_s=actual_duration
             )
             metadata_list.append(meta)
             
