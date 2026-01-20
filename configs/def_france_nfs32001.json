@@ -1,0 +1,67 @@
+{
+    "standard": "NFS 32-001",
+    "region": "France",
+    "seed": 42,
+    "modes": {
+        "police": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Police Nationale: Perfect Fourth Interval (435/580Hz), 50-60 CPM",
+            "nominal_frequencies": {
+                "min": 435.0,
+                "max": 580.0
+            },
+            "period_range": {
+                "min": 1.0,
+                "max": 1.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "gendarmerie": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Gendarmerie: Major Sixth Interval (435/732Hz), 50-60 CPM",
+            "nominal_frequencies": {
+                "min": 435.0,
+                "max": 732.0
+            },
+            "period_range": {
+                "min": 1.0,
+                "max": 1.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "pompiers": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Sapeurs-Pompiers: Major Second Interval (435/488Hz), 25-30 CPM",
+            "nominal_frequencies": {
+                "min": 435.0,
+                "max": 488.0
+            },
+            "period_range": {
+                "min": 2.0,
+                "max": 2.4
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "samu": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Ambulance UMH: Perfect Fifth Interval (435/651Hz), 50-60 CPM",
+            "nominal_frequencies": {
+                "min": 435.0,
+                "max": 651.0
+            },
+            "period_range": {
+                "min": 1.0,
+                "max": 1.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        }
+    }
+}

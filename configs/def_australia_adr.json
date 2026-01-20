@@ -1,0 +1,52 @@
+{
+    "standard": "ADR 94/00",
+    "region": "Australia",
+    "seed": 42,
+    "modes": {
+        "wail": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Standard Wail (500-2000Hz)",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 2000.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "yelp": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Standard Yelp",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 2000.0
+            },
+            "period_range": {
+                "min": 0.3,
+                "max": 0.5
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "sews": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Standard Emergency Warning Signal (SEWS): 500-1200Hz Sawtooth",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 4.0
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        }
+    }
+}

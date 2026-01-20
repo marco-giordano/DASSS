@@ -1,0 +1,176 @@
+{
+    "standard": "Comprehensive Feature Demo",
+    "region": "Global/User-Defined",
+    "seed": 12345,
+    "modes": {
+        "1_electronic_wail": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Standard electronic square wave wail",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "2_electronic_yelp": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Standard electronic square wave yelp",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.3,
+                "max": 0.5
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "3_phaser": {
+            "type": "electronic",
+            "mode": "phaser",
+            "description": "Phaser: Fast modulation",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.1,
+                "max": 0.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "4_piercer": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Piercer: Ultra-fast modulation",
+            "frequency_range": {
+                "min": 700.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.05,
+                "max": 0.08
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "5_hi_lo_nominal": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Hi-Lo with fixed frequencies",
+            "nominal_frequencies": {
+                "min": 450.0,
+                "max": 600.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "square"
+        },
+        "6_hi_lo_sampled": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Hi-Lo with sampled frequency ranges",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 700.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "square"
+        },
+        "7_rumbler_sine": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Rumbler: Low frequency sine wave",
+            "frequency_range": {
+                "min": 180.0,
+                "max": 350.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 6.0
+            },
+            "waveform": "sine"
+        },
+        "8_mechanical_wail": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical wail with asymmetry and variable pitch",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1500.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "sawtooth",
+            "mechanical_profile": {
+                "rise_ratio": 0.3,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.15
+            }
+        },
+        "9_pneumatic_martinho_custom": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Pneumatic Martin Horn with custom 6-step pattern (hlhlll)",
+            "nominal_frequencies": {
+                "min": 435.0,
+                "max": 580.0
+            },
+            "period_range": {
+                "min": 1.0,
+                "max": 1.0
+            },
+            "waveform": "trapezoid",
+            "tone_pattern": "hlhlll"
+        },
+        "10_duty_cycle_test": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Electronic wail with 20% duty cycle (narrow pulse)",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1000.0
+            },
+            "period_range": {
+                "min": 2.0,
+                "max": 3.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.2
+        },
+        "11_triangle_wave": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Yelp using Triangle wave",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1500.0
+            },
+            "period_range": {
+                "min": 0.3,
+                "max": 0.5
+            },
+            "waveform": "triangle"
+        }
+    }
+}

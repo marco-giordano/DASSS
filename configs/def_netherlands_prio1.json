@@ -1,0 +1,37 @@
+{
+    "standard": "Netherlands Prio 1",
+    "region": "The Netherlands",
+    "seed": 42,
+    "modes": {
+        "prio1_two_tone": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Standard Prio 1: 375/500Hz",
+            "nominal_frequencies": {
+                "min": 375.0,
+                "max": 500.0
+            },
+            "period_range": {
+                "min": 1.0,
+                "max": 1.5
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "slow_whoop": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Evacuation Signal",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 4.0
+            },
+            "waveform": "tringle",
+            "duty_cycle": 0.5
+        }
+    }
+}

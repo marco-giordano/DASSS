@@ -3,31 +3,87 @@
     "region": "USA",
     "seed": 42,
     "modes": {
-        "wail": {
-            "description": "Standard long-range warning. Slow rise and fall.",
-            "frequency_range": { "min": 500.0, "max": 1600.0 },
-            "period_range": { "min": 3.0, "max": 5.0 },
+        "wail_generic": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Generic SAE Wail 500-1600Hz",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
             "waveform": "square",
             "duty_cycle": 0.5
         },
-        "yelp": {
-            "description": "High urgency, rapid modulation for heavy traffic.",
-            "frequency_range": { "min": 500.0, "max": 1600.0 },
-            "period_range": { "min": 0.3, "max": 0.5 },
+        "yelp_generic": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Generic SAE Yelp",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.3,
+                "max": 0.5
+            },
             "waveform": "square",
             "duty_cycle": 0.5
         },
-        "phaser": {
-            "description": "Hyper-fast modulation (Piercer) for intersections.",
-            "frequency_range": { "min": 1500.0, "max": 2500.0 },
-            "period_range": { "min": 0.06, "max": 0.1 },
+        "federal_q_mechanical": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Federal Signal Q-Siren (Mechanical). Fast wind-up, very long coast-down.",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1500.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.2
+            }
+        },
+        "whelen_piercer": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Whelen Piercer: 750-1700Hz, 800 CPM (0.075s)",
+            "frequency_range": {
+                "min": 750.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.07,
+                "max": 0.08
+            },
             "waveform": "square",
             "duty_cycle": 0.5
         },
-        "rumbler": {
-            "description": "Low-frequency sub-harmonics for physical vibration.",
-            "frequency_range": { "min": 180.0, "max": 400.0 },
-            "period_range": { "min": 3.0, "max": 5.0 },
+        "federal_rumbler": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Federal Signal Rumbler: 180-400Hz",
+            "frequency_range": {
+                "min": 180.0,
+                "max": 400.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
             "waveform": "sine",
             "duty_cycle": 0.5
         }

@@ -36,68 +36,110 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
     Enforces f_max >= f_min * min_separation.
     """
     # Rejection Sampling Loop
-    # We try up to N times to generate compliant parameters.
-    # If we fail, we fall back to safe defaults or error out.
     max_retries = 100
     
-    freq_min_limit = params.frequency_range.min
-    freq_max_limit = params.frequency_range.max
-    # Period limits
-    p_min_limit = params.period_range.min
-    p_max_limit = params.period_range.max
+    # Init limits with safe defaults or derived values
+    freq_min_limit = 0.0
+    freq_max_limit = 0.0
+    
+    # 1. Frequency Constraints
+    if params.nominal_frequencies:
+        # Use Fixed values (simulating a range where min=max)
+        freq_min_limit = params.nominal_frequencies.min
+        freq_max_limit = params.nominal_frequencies.max
+    elif params.frequency_range:
+        freq_min_limit = params.frequency_range.min
+        freq_max_limit = params.frequency_range.max
+    else:
+        raise ValueError(f"Siren mode '{params.description}' must have either frequency_range or nominal_frequencies.")
+
+    # 2. Period Constraints
+    period_limit_min = 1.0
+    period_limit_max = 1.0
+    if params.period_range:
+        period_limit_min = params.period_range.min
+        period_limit_max = params.period_range.max
+    else:
+        # If no period range, is there a nominal period? No, schema has period_range.
+        # Maybe we should allow single 'period' in future, but for now strict.
+        # Or default?
+        raise ValueError(f"Siren mode '{params.description}' must have period_range.")
     
     for _ in range(max_retries):
-        # 1. Sample f_min
-        # Constraint: f_min must leave room for f_max (f_max >= f_min * min_sep)
-        # Max valid f_min = freq_max_limit / min_separation
-        upper_fmin_bound = min(freq_max_limit, freq_max_limit / max(1.0, min_separation))
         
-        # If range is impossible, we can't solve it.
-        if upper_fmin_bound < freq_min_limit:
-            # Definition is tighter than separation requirements.
-            # Pivot constraint: separation applies?
-            # We'll just sample in range and hope checking catches it.
-            f_min = random.uniform(freq_min_limit, freq_max_limit)
+        # 1. Sample F_min
+        if params.nominal_frequencies:
+            f_min = params.nominal_frequencies.min
         else:
-            f_min = random.uniform(freq_min_limit, upper_fmin_bound)
+            f_min = random.uniform(freq_min_limit, freq_max_limit)
             
-        # 2. Sample f_max
-        # Must be >= f_min * separation
-        min_f_max = f_min * min_separation
-        
-        # Range for f_max is [min_f_max, freq_max_limit]
-        if min_f_max > freq_max_limit:
-            # This sample of f_min is invalid (too high). Retry.
-            continue
+        # 2. Sample F_max
+        if params.nominal_frequencies:
+            f_max = params.nominal_frequencies.max
+        else:
+             f_max = random.uniform(freq_min_limit, freq_max_limit)
+
+        # Ensure f_min < f_max
+        if f_min > f_max:
+            f_min, f_max = f_max, f_min
             
-        f_max = random.uniform(min_f_max, freq_max_limit)
-        
         # 3. Sample Period
-        period = random.uniform(p_min_limit, p_max_limit)
+        if period_limit_min == period_limit_max:
+            period = period_limit_min
+        else:
+            period = random.uniform(period_limit_min, period_limit_max)
+            
+        # 4. Validation
+        # Check explicit constraints if ranges were used
+        if not params.nominal_frequencies:
+            # Check Min Separation
+            if f_max < f_min * min_separation:
+                continue
+                
+            # Check Absolute Limits
+            if not (freq_min_limit <= f_min <= freq_max_limit): continue
+            if not (freq_min_limit <= f_max <= freq_max_limit): continue
         
-        # Final Verification against Definition (Redundant but requested "verified against specifications")
-        if not (freq_min_limit <= f_min <= freq_max_limit): continue
-        if not (freq_min_limit <= f_max <= freq_max_limit): continue
-        if not (p_min_limit <= period <= p_max_limit): continue
-        if f_max < f_min * min_separation: continue # Should be met by construction
-        
-        # If all good, return
+        # If we get here, valid
         return {
             "frequency_min": f_min,
             "frequency_max": f_max,
             "period": period,
             "waveform": params.waveform,
-            "duty_cycle": params.duty_cycle
+            "duty_cycle": params.duty_cycle,
+            # Pass through new parameters for generator
+            "type": params.type,
+            "mode": params.mode,
+            "mechanical_profile": params.mechanical_profile,
+            "variable_wail": params.variable_wail,
+            "tone_pattern": params.tone_pattern
         }
-        
-    # If we exhausted retries, return separate fallback or raise error
-    # For robustness, we return the last attempt clamped
+    
+    # Fallback to defaults if sampling fails
+    if params.nominal_frequencies:
+         f_min = params.nominal_frequencies.min
+         f_max = params.nominal_frequencies.max
+    else:
+         f_min = freq_min_limit
+         # Fallback max ensures separation
+         safe_max = f_min * min_separation
+         if safe_max > freq_max_limit:
+             # If definition doesn't allow separation, we cap at limit (violating separation preference but respecting definition)
+             f_max = freq_max_limit
+         else:
+             f_max = safe_max
+
     return {
-        "frequency_min": freq_min_limit,
-        "frequency_max": freq_max_limit,
-        "period": p_min_limit,
+        "frequency_min": f_min,
+        "frequency_max": f_max,
+        "period": period_limit_min,
         "waveform": params.waveform,
-        "duty_cycle": params.duty_cycle
+        "duty_cycle": params.duty_cycle,
+        "type": params.type,
+        "mode": params.mode,
+        "mechanical_profile": params.mechanical_profile,
+        "variable_wail": params.variable_wail,
+        "tone_pattern": params.tone_pattern
     }
 
 def save_spectrogram(audio_data: np.ndarray, sample_rate: int, output_path: str, title: str = "Spectrogram"):

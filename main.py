@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from src.utils import load_json_definition, load_yaml_config, sample_parameters, save_metadata, save_spectrogram
 from src.generator import SirenSynthesizer
-from src.schemas import GenerationMetadata, Waveform
+from src.schemas import GenerationMetadata, Waveform, SirenModeEnum
 
 def main():
     parser = argparse.ArgumentParser(description="DASSS: Dry Anechoic Synthetic Siren Sounds Generator")
@@ -62,57 +62,29 @@ def main():
         print(f"  Generating {batch_config.num_iterations} samples for mode: {mode_name}")
         
         for i in range(batch_config.num_iterations):
-            # Constraint Logic:
-            # If force_minor_third is active for Hi-Lo, we shouldn't enforce the large min_separation
-            # because the ratio is fixed (approx 1.19) and might be smaller than min_separation (e.g. 1.5).
-            # Also, standard Separation (1.5) might exceed Hi-Lo defined range (450-600).
+            # Fallback separation
             current_separation = batch_config.min_frequency_separation
-            if batch_config.force_minor_third and ("hi-lo" in mode_name.lower() or "two-tone" in mode_name.lower()):
-                current_separation = 1.0 # Relax constraint, let minor third logic handle it later
             
             # Sample parameters
+            # utils.py handles nominal vs range logic
             params = sample_parameters(mode_params, min_separation=current_separation)
             
             # Duration from config
             duration_s = batch_config.duration_s
             
-            # Generate Audio
-            # Check if it's a Hi-Lo (Two-Tone) or Sweep
-            # We determine by checking if we have discrete frequencies or a range that implies sweeping.
-            # However, the current schema `ParameterRange` implies a range for Randomization, not necessarily discrete tones.
-            # A Hi-Lo is typically defined by specific alternating frequencies.
-            # Our current schema groups everything into "frequency_range" and "period".
-            # To strictly support Hi-Lo with the current schema, we might need to interpret "Hi-Lo" name or add a "type" field.
-            # For now, let's assume 'wail'/'yelp'/'phaser' are sweeps, and 'hi-lo' is two-tone.
-            # A robust way is to add specific logic or schema fields. 
-            # Given the prompt asked for "parameters that define the synthesis", let's assume standard behavior based on mode name 
-            # OR we could add a `siren_type` field to the schema. 
-            # Let's keep it simple: If 'hi-lo' in name lower case, use two-tone logic? 
-            # Or better, we can add a 'siren_class' to `SirenModeParams` in `schemas.py`? 
-            # Updating schemas now would require refactoring. 
-            # Let's infer for now or update schemas if I can. 
-            # Actually, I'll update `schemas.py` to include `type` field in `SirenModeParams` for robustness.
+            # Determine Mode Category for Dispatch
+            # params['mode'] is SirenModeEnum member
+            mode_enum = params['mode']
             
-            # WAIT: I will update `schemas.py` in a separate step if I decide to. 
-            # For this MVP, let's just stick to the generator logic:
-            # If the mode name suggests Hi-Lo, we treat it as two tone? 
-            # But wait, `f_min` and `f_max` are sampled from ranges.
-            # For Hi-Lo, we need f1 and f2. 
-            # Let's assume f_min is Low and f_max is High for the specific instance.
-            
-            # Minor Third Forcing
-            if batch_config.force_minor_third and ("hi-lo" in mode_name.lower() or "two-tone" in mode_name.lower()):
-                # Calculate Minor Third (3 semitones)
-                # Ratio = 2^(3/12) ~= 1.189207
-                # We enforce f2 = f1 * Ratio
-                # Use f_min as base
-                f_base = params['frequency_min']
-                f_minor = f_base * (2 ** (3/12))
-                params['frequency_max'] = f_minor
-                print(f"    [Forced Minor Third] {f_base:.1f}Hz -> {f_minor:.1f}Hz")
+            # Determine max_freq_limit for clamping (if sweep)
+            max_freq_limit = 20000.0
+            if mode_params.frequency_range:
+                max_freq_limit = mode_params.frequency_range.max
+            elif mode_params.nominal_frequencies:
+                max_freq_limit = mode_params.nominal_frequencies.max
 
             audio = None
-            if "hi-lo" in mode_name.lower() or "two-tone" in mode_name.lower():
+            if mode_enum in [SirenModeEnum.HI_LO, SirenModeEnum.TWO_TONE]:
                  audio = synth.generate_two_tone(
                     f1=params['frequency_min'], 
                     f2=params['frequency_max'], 
@@ -120,14 +92,11 @@ def main():
                     waveform=params['waveform'], 
                     duration_s=duration_s,
                     duty_cycle=params['duty_cycle'],
-                    enforce_cycle=batch_config.enforce_complete_cycle
+                    enforce_cycle=batch_config.enforce_complete_cycle,
+                    tone_pattern=params['tone_pattern']
                 )
             else:
-                # Determine siren type for realism
-                # Wail = Mechanical (usually)
-                # Others = Electronic
-                siren_type = 'mechanical' if 'wail' in mode_name.lower() else 'electronic'
-                
+                # Sweep Based (Wail, Yelp, Phaser, Piercer, Rumbler)
                 audio = synth.generate_siren_cycle(
                     f_min=params['frequency_min'], 
                     f_max=params['frequency_max'], 
@@ -135,14 +104,16 @@ def main():
                     waveform=params['waveform'], 
                     duration_s=duration_s,
                     duty_cycle=params['duty_cycle'],
-                    siren_type=siren_type,
-                    max_freq_limit=mode_params.frequency_range.max,
+                    siren_type=params['type'],
+                    mechanical_profile=params['mechanical_profile'],
+                    variable_wail_config=params['variable_wail'],
+                    max_freq_limit=max_freq_limit,
                     enforce_cycle=batch_config.enforce_complete_cycle
                 )
             
             # Filename - Simplified without timestamp
             # Use zfill for better sorting: wail_00, wail_01
-            filename = f"{siren_def.standard}_{mode_name}_{str(i).zfill(2)}.wav".replace(" ", "_")
+            filename = f"{siren_def.standard}_{mode_name}_{str(i).zfill(2)}.wav".replace(" ", "_").replace("/", "_")
             filepath = output_dir / filename
             
             # Save Audio

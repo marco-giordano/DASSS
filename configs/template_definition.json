@@ -1,10 +1,12 @@
 {
-    "standard": "TEMPLATE_WITH_EXPLANATIONS",
+    "standard": "TEMPLATE_STRUCTURE",
     "region": "GLOBAL",
     "seed": 42,
     "modes": {
-        "wail_mechanical": {
-            "description": "Any mode containing 'wail' triggers the Mechanical Siren Logic (asymmetric envelope: slow rise, fast fall).",
+        "wail_mechanical_example": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical Siren with asymmetric envelope",
             "frequency_range": {
                 "min": 600.0,
                 "max": 1600.0
@@ -14,23 +16,21 @@
                 "max": 5.0
             },
             "waveform": "square",
-            "duty_cycle": 0.5
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.0
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.2
+            }
         },
-        "wail_mechanical_trapezoid": {
-            "description": "Any mode containing 'wail' triggers the Mechanical Siren Logic (asymmetric envelope: slow rise, fast fall).",
-            "frequency_range": {
-                "min": 600.0,
-                "max": 1600.0
-            },
-            "period_range": {
-                "min": 3.0,
-                "max": 5.0
-            },
-            "waveform": "trapezoid",
-            "duty_cycle": 0.5
-        },        
-        "yelp_electronic": {
-            "description": "Standard names (e.g. 'yelp', 'phaser') use Electronic Sweep Logic (linear/symmetric).",
+        "yelp_electronic_example": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Standard electronic yelp",
             "frequency_range": {
                 "min": 600.0,
                 "max": 1600.0
@@ -39,12 +39,13 @@
                 "min": 0.3,
                 "max": 0.5
             },
-            "waveform": "sawtooth",
-            "duty_cycle": 0.5
+            "waveform": "square"
         },
-        "hi-lo_twotone": {
-            "description": "Names containing 'hi-lo' or 'two-tone' trigger Discrete Two-Tone Logic (instant frequency switch).",
-            "frequency_range": {
+        "hi_lo_nominal_example": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Hi-Lo with fixed nominal frequencies (no sampling range)",
+            "nominal_frequencies": {
                 "min": 450.0,
                 "max": 600.0
             },
@@ -52,20 +53,22 @@
                 "min": 0.8,
                 "max": 1.2
             },
-            "waveform": "triangle",
-            "duty_cycle": 0.5
+            "waveform": "square"
         },
-        "rumbler_sine": {
-            "description": "Example using 'sine' waveform. Supported waveforms: 'square', 'sine', 'sawtooth', 'triangle', 'trapezoid'.",
-            "frequency_range": {
-                "min": 180.0,
-                "max": 350.0
+        "martinho_custom_two_tone": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Martin Horn with custom 6-step pattern (High-High-High-Low-Low-Low)",
+            "nominal_frequencies": {
+                "min": 435.0,
+                "max": 580.0
             },
             "period_range": {
-                "min": 3.0,
-                "max": 5.0
+                "min": 2.0,
+                "max": 4.0
             },
-            "waveform": "sine"
+            "waveform": "trapezoid",
+            "tone_pattern": "hhhlll"
         }
     }
 }

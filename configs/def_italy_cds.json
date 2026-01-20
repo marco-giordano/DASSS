@@ -1,0 +1,57 @@
+{
+    "standard": "Codice della Strada Art. 177",
+    "region": "Italy",
+    "seed": 42,
+    "modes": {
+        "emergenza": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Emergency: 466/622Hz",
+            "nominal_frequencies": {
+                "min": 466.0,
+                "max": 622.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "soccorso": {
+            "type": "electronic",
+            "mode": "two-tone",
+            "description": "Rescue: 392/660Hz",
+            "nominal_frequencies": {
+                "min": 392.0,
+                "max": 660.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "mechanical_sonora": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "La Sonora: Mechanical high-pitch whistle",
+            "frequency_range": {
+                "min": 1500.0,
+                "max": 2500.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.3,
+                "rise_exponent": 1.0,
+                "fall_exponent": 1.5
+            }
+        }
+    }
+}

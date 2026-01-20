@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as signal
 from typing import Optional, Literal, Union
-from .schemas import Waveform, RealismConfig
+from .schemas import Waveform, RealismConfig, SirenType, MechanicalProfile, VariableWailConfig
 
 # Try importing torch for Metal support
 try:
@@ -217,11 +217,10 @@ class SirenSynthesizer:
         num_samples = int(duration_s * self.sample_rate)
     def _generate_variable_wail_sweep(self, min_duration: float, f_min: float, nominal_f_max: float, nominal_period: float,
                                       rise_ratio: float, rise_exp: float, fall_exp: float, 
-                                      limit_f_max: float = 10000.0) -> Union[np.ndarray, "torch.Tensor"]:
+                                      limit_f_max: float = 10000.0,
+                                      variation_magnitude: float = 0.2) -> Union[np.ndarray, "torch.Tensor"]:
         """
-        Generates a non-periodic sweep signal where each cycle has a random peak frequency (f_max).
-        The period scales with the peak frequency (Constant Acceleration model).
-        Ensures the generation lasts at least min_duration, finishing the last complete cycle.
+        Generates a non-periodic sweep signal.
         """
         target_samples = int(min_duration * self.sample_rate)
         
@@ -229,7 +228,7 @@ class SirenSynthesizer:
         # Since loop in python is slow, we aim for chunk-based.
         
         # Variation magnitude
-        mag = self.realism.wail_variation_magnitude
+        mag = variation_magnitude
         
         current_samples = 0
         chunks_freq = []
@@ -376,73 +375,104 @@ class SirenSynthesizer:
                              waveform: Waveform, 
                              duration_s: float,
                              duty_cycle: float = 0.5,
-                             siren_type: Literal['electronic', 'mechanical'] = 'electronic',
+                             siren_type: SirenType = SirenType.ELECTRONIC,
+                             mechanical_profile: Optional[MechanicalProfile] = None,
+                             variable_wail_config: Optional[VariableWailConfig] = None,
                              max_freq_limit: float = 20000.0,
                              enforce_cycle: bool = True) -> np.ndarray:
         
+        # Resolve Mechanical Parameters
+        # Defaults
+        mech_rise = 0.2
+        mech_rise_exp = 0.5
+        mech_fall_exp = 2.0
+        
+        if mechanical_profile:
+            mech_rise = mechanical_profile.rise_ratio
+            mech_rise_exp = mechanical_profile.rise_exponent
+            mech_fall_exp = mechanical_profile.fall_exponent
+        
+        # Check if Variable Wail is Active
+        is_variable = False
+        if variable_wail_config and variable_wail_config.enabled:
+             # Only strictly applies to mechanical/pneumatic or if explicitly allowed?
+             # User said "apply them to wail sounds". Typically mechanical.
+             # We allow it if configured.
+             if siren_type in [SirenType.MECHANICAL, SirenType.PNEUMATIC]:
+                 is_variable = True
+        
+        # Override based on global realism toggle for variable wail?
+        # User moved variable wail to JSON, so JSON takes precedence. 
+        # But global `mechanical_asymmetry` still exists.
+        
+        use_asymmetry = self.realism.mechanical_asymmetry and (siren_type in [SirenType.MECHANICAL, SirenType.PNEUMATIC])
+
         # --- DURATION ADJUSTMENT (Complete Cycle) ---
-        if siren_type == 'mechanical' and self.realism.mechanical_asymmetry and self.realism.variable_wail:
-            # For variable wail, we generate first to determine duration
-            # This function returns FULL cycles (potentially > duration_s)
+        if use_asymmetry and is_variable:
+            # Temporarily attach magnitude to self for the helper (refactor later to pass explicit magnitude)
+            # The helper `_generate_variable_wail_sweep` reads `self.realism.wail_variation_magnitude` which is GONE.
+            # I need to update the helper or monkeypatch.
+            # Better: Update helper signature. But helper is `_generate_variable_wail_sweep`.
+            # I will refactor helper signature in a separate step or assume I fix it. 
+            # WAIT. I need to pass magnitude to helper.
+            # Let's fix helper first? No, I can pass it as arg if I update helper.
+            # I'll update helper inside this tool call? No, it's separate method.
+            # I will assume `_generate_variable_wail_sweep` is updated or I update it NOW.
+            
+            # Let's update `_generate_variable_wail_sweep` signature in next step.
+            # For now, call it with a new kwargs `variation_magnitude` if I can? No Python doesn't allow invisible args.
+            # I'll update the call here, but I must ensure I update the definition in next step.
+            
             inst_freq = self._generate_variable_wail_sweep(
                 min_duration=duration_s,
                 f_min=f_min,
                 nominal_f_max=f_max,
                 nominal_period=period,
-                rise_ratio=self.realism.mechanical_rise_ratio,
-                rise_exp=self.realism.mechanical_rise_exponent,
-                fall_exp=self.realism.mechanical_fall_exponent,
-                limit_f_max=max_freq_limit
+                rise_ratio=mech_rise,
+                rise_exp=mech_rise_exp,
+                fall_exp=mech_fall_exp,
+                limit_f_max=max_freq_limit,
+                variation_magnitude=variable_wail_config.variation_magnitude
             )
             
             if not enforce_cycle:
-                # Trim to requested duration if not enforcing complete cycles
                 target_samples = int(duration_s * self.sample_rate)
                 inst_freq = inst_freq[:target_samples]
             
-            # Update Dimensions based on actual generation
             num_samples = len(inst_freq)
             actual_duration = num_samples / self.sample_rate
             
-            # Regenerate Time Vector for Phase Integration
             if self.use_metal:
                 t = torch.arange(0, num_samples, device=self.device) * (1.0 / self.sample_rate)
             else:
                 t = np.linspace(0, actual_duration, num_samples, endpoint=False)
                 
         else:
-            # Standard Periodic (Electronic or Fixed Mechanical)
+            # Standard Periodic
             if enforce_cycle:
-                # Adjust duration to full cycles
                 num_cycles = np.ceil(duration_s / period)
                 actual_duration = num_cycles * period
                 num_samples = int(actual_duration * self.sample_rate)
-                # Generate Time Vector for adjusted duration
-                if self.use_metal:
-                    t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
-                else:
-                    t = np.linspace(0, actual_duration, num_samples, endpoint=False)
             else:
-                # Strict duration
                 actual_duration = duration_s
                 num_samples = int(actual_duration * self.sample_rate)
-                # Generate Time Vector for strict duration
-                if self.use_metal:
-                    t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
-                else:
-                    t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+
+            # Time Vector
+            if self.use_metal:
+                t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+            else:
+                t = np.linspace(0, actual_duration, num_samples, endpoint=False)
 
             lfo_freq = 1.0 / period
 
-
             # --- MODULATOR ---
-            if siren_type == 'mechanical' and self.realism.mechanical_asymmetry:
-                # Standard Periodic Asymmetric
+            if use_asymmetry:
+                # Mechanical / Pneumatic Envelope
                 sweep_signal = self._generate_mechanical_envelope(
                     t, period, 
-                    rise_ratio=self.realism.mechanical_rise_ratio,
-                    rise_exp=self.realism.mechanical_rise_exponent,
-                    fall_exp=self.realism.mechanical_fall_exponent
+                    rise_ratio=mech_rise,
+                    rise_exp=mech_rise_exp,
+                    fall_exp=mech_fall_exp
                 )
                 inst_freq = f_min + (f_max - f_min) * sweep_signal
             else:
@@ -458,10 +488,9 @@ class SirenSynthesizer:
                 
                 inst_freq = f_min + (f_max - f_min) * sweep_signal
         
-        # Add Jitter (Must match new num_samples)
+        # Add Jitter
         jitter = self._add_oscillator_jitter(num_samples)
         if self.use_metal:
-             # jitter is already tensor if metal
              inst_freq = inst_freq + jitter
         else:
              inst_freq = inst_freq + jitter
@@ -487,50 +516,73 @@ class SirenSynthesizer:
                           waveform: Waveform, 
                           duration_s: float,
                           duty_cycle: float = 0.5,
-                          enforce_cycle: bool = True) -> np.ndarray:
+                          enforce_cycle: bool = True,
+                          tone_pattern: Optional[str] = None) -> np.ndarray:
         
+        # Determine actual period/cycle length
         if enforce_cycle:
-            # Enforce Complete Cycles
-            val = duration_s / period
-            # If accidentally perfect int, ceil gives same.
-            num_cycles = np.ceil(val)
-            actual_duration = num_cycles * period
-            num_samples = int(actual_duration * self.sample_rate)
+             num_cycles = np.ceil(duration_s / period)
+             actual_duration = num_cycles * period
+             num_samples = int(actual_duration * self.sample_rate)
         else:
-            actual_duration = duration_s
-            num_samples = int(actual_duration * self.sample_rate)
-        
-        # Time vector
-        if self.use_metal:
-             t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
-        else:
-             t = np.linspace(0, actual_duration, num_samples, endpoint=False)
-        
-        lfo_freq = 1.0 / period
+             actual_duration = duration_s
+             num_samples = int(actual_duration * self.sample_rate)
+             
+        # Generate Pattern Signal
+        if tone_pattern:
+            # Custom 6-char pattern (e.g. 'hhhlll')
+            pattern_len = len(tone_pattern) 
+            sequence = []
+            for char in tone_pattern:
+                if char.lower() == 'h': sequence.append(1.0)
+                elif char.lower() == 'l': sequence.append(0.0)
+                else: sequence.append(0.0) # Default low
+            
+            # Create the pattern array for one cycle
+            samples_per_cycle = int(period * self.sample_rate)
+            samples_per_step = max(1, samples_per_cycle // pattern_len)
+            
+            cycle_signal = np.zeros(samples_per_cycle)
+            for step_i, val in enumerate(sequence):
+                start = step_i * samples_per_step
+                end = (step_i + 1) * samples_per_step
+                if step_i == pattern_len - 1: end = samples_per_cycle # Fill remainder
+                cycle_signal[start:end] = val
+            
+            # Tile for duration
+            repeats = int(np.ceil(num_samples / len(cycle_signal)))
+            switching_signal = np.tile(cycle_signal, repeats)[:num_samples]
+            
+            if self.use_metal:
+                 switching_signal = torch.tensor(switching_signal, device=self.device, dtype=torch.float32)
 
-        if self.use_metal:
-            # Metal
-            # Switch
-            is_high = torch.sin(2 * np.pi * lfo_freq * t) >= 0
-            switching_signal = torch.where(is_high, torch.tensor(1.0, device=self.device), torch.tensor(0.0, device=self.device))
-            
-            inst_freq = f1 + (f2 - f1) * switching_signal
-            inst_freq += self._add_oscillator_jitter(num_samples)
-            
-            phase = self._generate_phasor(inst_freq)
-            audio_high_res = self._apply_analog_saturation(phase, waveform, duty_cycle)
-            audio_high_res = self._apply_horn_response(audio_high_res)
-            
         else:
-            # CPU
-            t = np.linspace(0, duration_s, num_samples, endpoint=False)
-            switching_signal = 0.5 * (1 + signal.square(2 * np.pi * lfo_freq * t))
-            inst_freq = f1 + (f2 - f1) * switching_signal
-            inst_freq += self._add_oscillator_jitter(num_samples)
+             # Standard Square LFO
+            lfo_freq = 1.0 / period
             
-            phase = self._generate_phasor(inst_freq)
-            audio_high_res = self._apply_analog_saturation(phase, waveform, duty_cycle)
-            audio_high_res = self._apply_horn_response(audio_high_res)
+            if self.use_metal:
+                t = torch.arange(0, num_samples, device=self.device) * (actual_duration / num_samples)
+                # Switch
+                is_high = torch.sin(2 * np.pi * lfo_freq * t) >= 0
+                switching_signal = torch.where(is_high, torch.tensor(1.0, device=self.device), torch.tensor(0.0, device=self.device))
+            else:
+                t = np.linspace(0, actual_duration, num_samples, endpoint=False)
+                # Using square wave 0 to 1
+                switching_signal = 0.5 * (1 + signal.square(2 * np.pi * lfo_freq * t, duty=duty_cycle))
+        
+        # Apply frequencies
+        inst_freq = f1 + (f2 - f1) * switching_signal
+        
+        # Add Jitter
+        jitter = self._add_oscillator_jitter(num_samples)
+        if self.use_metal:
+             inst_freq = inst_freq + jitter
+        else:
+             inst_freq = inst_freq + jitter
+            
+        phase = self._generate_phasor(inst_freq)
+        audio_high_res = self._apply_analog_saturation(phase, waveform, duty_cycle)
+        audio_high_res = self._apply_horn_response(audio_high_res)
         
         audio = self._decimate(audio_high_res)
         
