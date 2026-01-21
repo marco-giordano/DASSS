@@ -110,22 +110,22 @@
             "mode": "wail",
             "description": "Mechanical wail with asymmetry and variable pitch",
             "frequency_range": {
-                "min": 500.0,
-                "max": 1500.0
+                "min": 400.0,
+                "max": 1200.0
             },
             "period_range": {
                 "min": 4.0,
                 "max": 8.0
             },
-            "waveform": "sawtooth",
+            "waveform": "triangle",
             "mechanical_profile": {
-                "rise_ratio": 0.3,
+                "rise_ratio": 0.2,
                 "rise_exponent": 0.5,
                 "fall_exponent": 2.5
             },
             "variable_wail": {
                 "enabled": true,
-                "variation_magnitude": 0.15
+                "variation_magnitude": 0.3
             }
         },
         "9_pneumatic_martinho_custom": {
