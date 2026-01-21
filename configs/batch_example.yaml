@@ -7,7 +7,7 @@ num_iterations: 1 # Number of samples to generate per siren mode in the batch
 duration_s: 10.0 # Duration in seconds for each sample
 oversampling: 2 # 1 = off. Keep it low to avoid artifacts.
 use_metal: true # Use Metal (MPS) acceleration if available
-seed: 43
+seed: 44
 generate_spectrograms: true # Generate spectrogram images for each output file
 
 # Siren-specific parameters
