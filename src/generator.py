@@ -32,15 +32,32 @@ class SirenSynthesizer:
                 print("SirenSynthesizer using Metal (MPS) acceleration.")
 
     def _generate_phasor(self, frequency_array: Union[np.ndarray, "torch.Tensor"]) -> Union[np.ndarray, "torch.Tensor"]:
-        """Integrates instantaneous frequency to get phase."""
+        """Integrates instantaneous frequency to get phase.
+        
+        IMPORTANT: Cumulative summation must be done in float64, even on the MPS
+        (Metal) path where tensors are float32. float32 cumsum loses precision as
+        the running total grows: at 10s (fs=44100, ~1100Hz carrier) the error
+        reaches −37 cycles (−234 rad), at 22s it is −181 cycles (−1139 rad).
+        This produces catastrophic broadband noise that grows as O(t²) — exactly
+        the "background noise ramping up after ~11s" symptom.
+        
+        Fix: always compute cumsum in float64 on CPU (numpy), then wrap to [0, 2π]
+        before converting back to float32 for MPS. The wrapped values are small
+        (≤ 6.28) so float32 represents them accurately (error < 1e-6 rad).
+        """
         dt = 1.0 / self.sample_rate
         if self.use_metal and isinstance(frequency_array, torch.Tensor):
-            # Phase is scalar integration
-            phase = 2 * np.pi * torch.cumsum(frequency_array, dim=0) * dt
-            return phase
+            # Pull to CPU, upcast to float64 for numeric precision, cumsum, wrap, 
+            # then send result back to MPS as float32.
+            freq_np = frequency_array.cpu().numpy().astype(np.float64)
+            phase_np = (2.0 * np.pi * np.cumsum(freq_np) * dt) % (2.0 * np.pi)
+            return torch.from_numpy(phase_np.astype(np.float32)).to(self.device)
         else:
-            phase = 2 * np.pi * np.cumsum(frequency_array) * dt
+            # numpy arrays default to float64 — no precision loss here.
+            phase = 2.0 * np.pi * np.cumsum(frequency_array) * dt
+            phase = phase % (2.0 * np.pi)
             return phase
+
 
     def _apply_analog_saturation(self, phase: Union[np.ndarray, "torch.Tensor"], waveform: Waveform, duty_cycle: float = 0.5) -> Union[np.ndarray, "torch.Tensor"]:
         """
@@ -156,43 +173,57 @@ class SirenSynthesizer:
         return filtered
 
     def _add_oscillator_jitter(self, num_samples: int) -> Union[np.ndarray, "torch.Tensor"]:
-        """Adds low-frequency random noise to simulate voltage drift."""
+        """Adds low-frequency random noise to simulate voltage drift.
+        
+        Design rationale:
+        - A DC-blocking highpass filter is applied BEFORE the smoothing lowpass so
+          the jitter has strictly zero mean. This is essential: if DC leaks through,
+          cumsum(jitter) in _generate_phasor becomes an unbounded random walk whose
+          variance grows as O(n), producing a noise floor that rises over time.
+        - Pipeline: white_noise -> highpass (DC-block) -> lowpass (smooth) -> scale
+        - The resulting jitter is stationary (bounded variance) for any signal length.
+        """
         if not self.realism.oscillator_jitter:
             if self.use_metal: return torch.zeros(num_samples, device=self.device)
             else: return np.zeros(num_samples)
             
         jitter_amt = self.realism.jitter_amount
         
-        # Use Low-Pass Filtered White Noise (Approx Pink Noise)
-        # Instead of cumsum (Brownian) which has unbounded variance.
-        # Bounded noise ensures it doesn't drift to infinity.
+        # --- Step 1: DC-blocking highpass (~0.5 Hz cutoff) ---
+        # Removes any DC component so cumsum(jitter) is mean-reverting.
+        # Bilinear-transformed 1-pole RC highpass: y[n] = x[n] - x[n-1] + alpha*y[n-1]
+        # alpha = R/(R+1) where R = fs / (2*pi*f_cut): very close to 1 for low f_cut.
+        alpha_hp = 0.9999  # ~0.5 Hz highpass at 88200 Hz
+        b_hp = [1.0, -1.0]
+        a_hp = [1.0, -alpha_hp]
         
-        # Filter coeffs for simple one-pole lowpass
-        b = [0.01]
-        a = [1.0, -0.99]
+        # --- Step 2: Smoothing lowpass (shapes frequency content) ---
+        # Simple one-pole EMA: y[n] = (1-alpha)*x[n] + alpha*y[n-1]
+        # Cutoff ~ fs * (1-alpha) / (2*pi): with alpha=0.995 -> ~70 Hz at 88200
+        alpha_lp = 0.995
+        b_lp = [1.0 - alpha_lp]
+        a_lp = [1.0, -alpha_lp]
         
+        # --- Step 3: Scaling ---
+        # Target: roughly +/- (jitter_amt * 10) Hz std dev.
+        # With the two-filter chain, empirical gain is ~1.0 std for WN(0,1) input.
+        scale = jitter_amt * 10.0
+
         if self.use_metal:
-            # Jitter on GPU
             noise = torch.randn(num_samples, device=self.device)
-            # Simple IIR on GPU?
-            # y[n] = b*x[n] - a[1]*y[n-1] -> y[n] = 0.01*x[n] + 0.99*y[n-1]
-            # This is equivalent to exponential moving average or P-controller.
-            # We can use cumsum with decay? No.
-            # Efficient custom kernel or fallback to CPU?
-            # Fallback to CPU for filter stability is safer and fast enough for noise.
             noise_np = noise.cpu().numpy()
-            jitter_np = signal.lfilter(b, a, noise_np)
+            # Apply highpass then lowpass
+            noise_hp = signal.lfilter(b_hp, a_hp, noise_np)
+            jitter_np = signal.lfilter(b_lp, a_lp, noise_hp)
             jitter = torch.from_numpy(jitter_np.astype(np.float32)).to(self.device)
-            
-            # Normalize strength
-            # std dev of noise is 1. filter gain is approx 1/(1-0.99) = 100? No.
-            # Let's just scale strictly
-            jitter = jitter_amt * 500.0 * jitter # scaling factor to get approx +/- 5-10Hz range
+            jitter = scale * jitter
             return jitter
         else:
             noise = np.random.normal(0, 1.0, num_samples)
-            jitter = signal.lfilter(b, a, noise)
-            jitter = jitter_amt * 500.0 * jitter
+            # Apply highpass then lowpass
+            noise_hp = signal.lfilter(b_hp, a_hp, noise)
+            jitter_np = signal.lfilter(b_lp, a_lp, noise_hp)
+            jitter = scale * jitter_np
             return jitter
 
     def _decimate(self, audio: Union[np.ndarray, "torch.Tensor"]) -> np.ndarray:

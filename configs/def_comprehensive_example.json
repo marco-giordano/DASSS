@@ -117,7 +117,7 @@
                 "min": 4.0,
                 "max": 8.0
             },
-            "waveform": "triangle",
+            "waveform": "square",
             "mechanical_profile": {
                 "rise_ratio": 0.2,
                 "rise_exponent": 0.5,

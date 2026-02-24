@@ -25,6 +25,9 @@ def main():
     output_dir = Path(batch_config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    samples_dir = output_dir / "samples"
+    samples_dir.mkdir(parents=True, exist_ok=True)
+    
     # Initialize Synthesizer
     synth = SirenSynthesizer(
         sample_rate=batch_config.sample_rate, 
@@ -56,12 +59,27 @@ def main():
 
     metadata_list = []
     
+    total_items = len(siren_def.modes) * batch_config.num_iterations
+    current_item = 0
+    start_time = time.time()
+    
     print(f"Starting generation loop for standard: {siren_def.standard}...")
     
     for mode_name, mode_params in siren_def.modes.items():
         print(f"  Generating {batch_config.num_iterations} samples for mode: {mode_name}")
         
         for i in range(batch_config.num_iterations):
+            current_item += 1
+            if current_item > 1:
+                elapsed_time = time.time() - start_time
+                avg_time = elapsed_time / (current_item - 1)
+                remaining_items = total_items - (current_item - 1)
+                eta_seconds = avg_time * remaining_items
+                import datetime
+                eta_str = str(datetime.timedelta(seconds=int(eta_seconds)))
+                print(f"    [Progress: {current_item}/{total_items} | ETA: {eta_str}]")
+            else:
+                print(f"    [Progress: {current_item}/{total_items} | ETA: Calculating...]")
             # Fallback separation
             current_separation = batch_config.min_frequency_separation
             
@@ -114,7 +132,7 @@ def main():
             # Filename - Simplified without timestamp
             # Use zfill for better sorting: wail_00, wail_01
             filename = f"{siren_def.standard}_{mode_name}_{str(i).zfill(2)}.wav".replace(" ", "_").replace("/", "_")
-            filepath = output_dir / filename
+            filepath = samples_dir / filename
             
             # Save Audio
             sf.write(filepath, audio, batch_config.sample_rate, subtype='PCM_24')
@@ -151,7 +169,11 @@ def main():
     # Save Metadata
     meta_path = output_dir / "metadata.csv"
     save_metadata(metadata_list, str(meta_path))
-    print(f"Batch generation complete. Output in {output_dir}")
+    
+    end_time = time.time()
+    import datetime
+    total_time_str = str(datetime.timedelta(seconds=int(end_time - start_time)))
+    print(f"Batch generation complete in {total_time_str}. Output in {output_dir}")
 
 if __name__ == "__main__":
     main()

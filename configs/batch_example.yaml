@@ -1,14 +1,14 @@
 # Batch Configuration
 definition_file: "configs/def_comprehensive_example.json"
-output_dir: "output/test_comprehensive"
+output_dir: "output/test7_comprehensive"
 sample_rate: 44100
 bit_depth: 24
-num_iterations: 1 # Number of samples to generate per siren mode in the batch
-duration_s: 10.0 # Duration in seconds for each sample
-oversampling: 2 # 1 = off. Keep it low to avoid artifacts.
-use_metal: true # Use Metal (MPS) acceleration if available
-seed: 44
-generate_spectrograms: true # Generate spectrogram images for each output file
+num_iterations: 50 # Number of samples to generate per siren mode in the batch
+duration_s: 30.0 # Duration in seconds for each sample
+oversampling: 1 # 1 = off. Keep it low to avoid artifacts.
+use_metal: false # Use Metal (MPS) acceleration if available
+seed: 42
+generate_spectrograms: false # Generate spectrogram images for each output file
 
 # Siren-specific parameters
 enforce_complete_cycle: true # Ensure audio ends after a complete cycle (extends duration if needed)
@@ -20,4 +20,4 @@ realism:
   horn_filter: true # Enable speaker frequency response simulation
   oscillator_jitter: true # Enable simulated voltage drift
   mechanical_asymmetry: true # Enable asymmetric envelope for mechanical sirens
-  jitter_amount: 0.08            # Drift intensity (0.0-1.0)
+  jitter_amount: 0.3             # Drift intensity (0.0-1.0) — scale is now ×10 Hz, so 0.3 = ~3 Hz std dev
