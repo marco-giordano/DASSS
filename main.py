@@ -157,6 +157,8 @@ def main():
                 filename=filename,
                 standard=siren_def.standard,
                 siren_mode=mode_name,
+                mode=params['mode'].value if hasattr(params['mode'], 'value') else params['mode'],
+                type=params['type'].value if hasattr(params['type'], 'value') else params['type'],
                 frequency_min=params['frequency_min'],
                 frequency_max=params['frequency_max'],
                 period=params['period'],

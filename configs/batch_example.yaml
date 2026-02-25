@@ -1,9 +1,9 @@
 # Batch Configuration
-definition_file: "configs/def_comprehensive_example.json"
-output_dir: "output/test7_comprehensive"
-sample_rate: 44100
+definition_file: "configs/def_dataset_generation.json"
+output_dir: "output/test9_comprehensive"
+sample_rate: 32000
 bit_depth: 24
-num_iterations: 50 # Number of samples to generate per siren mode in the batch
+num_iterations: 20 # Number of samples to generate per siren mode in the batch
 duration_s: 30.0 # Duration in seconds for each sample
 oversampling: 1 # 1 = off. Keep it low to avoid artifacts.
 use_metal: false # Use Metal (MPS) acceleration if available

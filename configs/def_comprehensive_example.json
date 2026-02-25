@@ -1,7 +1,7 @@
 {
     "standard": "Comprehensive Feature Demo",
     "region": "Global/User-Defined",
-    "seed": 44,
+    "seed": 42,
     "modes": {
         "1_electronic_wail": {
             "type": "electronic",

@@ -281,7 +281,7 @@ Each mode in the `modes` object follows this structure:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `waveform` | enum | `"square"` | Base waveform type (see [Waveform Types](#waveform-types)) |
+| `waveform` | enum or list[enum] | `"square"` | Base waveform type (see [Waveform Types](#waveform-types)). You can provide an array of waveforms (e.g., `["square", "triangle", "trapezoid"]`) to randomly sample a different waveform from the list for each dataset item. |
 | `duty_cycle` | float | `0.5` | Duty cycle for square/trapezoid waves (0.0 to 1.0) |
 
 #### Advanced Options

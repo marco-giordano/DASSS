@@ -96,16 +96,19 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
             if f_max < f_min * min_separation:
                 continue
                 
-            # Check Absolute Limits
+            # Check absolute Limits
             if not (freq_min_limit <= f_min <= freq_max_limit): continue
             if not (freq_min_limit <= f_max <= freq_max_limit): continue
+        
+        # 5. Sample Waveform
+        waveform_choice = random.choice(params.waveform) if isinstance(params.waveform, list) else params.waveform
         
         # If we get here, valid
         return {
             "frequency_min": f_min,
             "frequency_max": f_max,
             "period": period,
-            "waveform": params.waveform,
+            "waveform": waveform_choice,
             "duty_cycle": params.duty_cycle,
             # Pass through new parameters for generator
             "type": params.type,
@@ -133,7 +136,7 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
         "frequency_min": f_min,
         "frequency_max": f_max,
         "period": period_limit_min,
-        "waveform": params.waveform,
+        "waveform": waveform_choice,
         "duty_cycle": params.duty_cycle,
         "type": params.type,
         "mode": params.mode,

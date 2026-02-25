@@ -53,7 +53,7 @@ class SirenModeParams(BaseModel):
     nominal_frequencies: Optional[NominalFrequencies] = Field(None, description="Exact fixed frequencies")
     
     # Waveform
-    waveform: Waveform = Field(default=Waveform.SQUARE, description="Waveform type")
+    waveform: Union[Waveform, List[Waveform]] = Field(default=Waveform.SQUARE, description="Waveform type or list of types")
     duty_cycle: Optional[float] = Field(0.5, description="Duty cycle for square/trapezoid waves (0.0-1.0)")
     
     # Specific options
@@ -106,6 +106,8 @@ class GenerationMetadata(BaseModel):
     filename: str
     standard: str
     siren_mode: str
+    mode: str
+    type: str
     frequency_min: float
     frequency_max: float
     period: float
