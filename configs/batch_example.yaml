@@ -1,18 +1,18 @@
 # Batch Configuration
-definition_file: "configs/def_dataset_generation.json"
-output_dir: "output/test9_comprehensive"
+definition_file: "configs/validated_combinations.json"
+output_dir: "output/final_dataset_28022026"
 sample_rate: 32000
 bit_depth: 24
 num_iterations: 20 # Number of samples to generate per siren mode in the batch
 duration_s: 30.0 # Duration in seconds for each sample
-oversampling: 1 # 1 = off. Keep it low to avoid artifacts.
+oversampling: 2 # 1 = off. Keep it low to avoid artifacts.
 use_metal: false # Use Metal (MPS) acceleration if available
 seed: 42
 generate_spectrograms: false # Generate spectrogram images for each output file
 
 # Siren-specific parameters
 enforce_complete_cycle: true # Ensure audio ends after a complete cycle (extends duration if needed)
-min_frequency_separation: 1.5 # min ratio between f1 and f2
+min_frequency_separation: 1.2 # min ratio between f1 and f2
 
 # Realism parameters
 realism:

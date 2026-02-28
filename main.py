@@ -129,9 +129,11 @@ def main():
                     enforce_cycle=batch_config.enforce_complete_cycle
                 )
             
-            # Filename - Simplified without timestamp
-            # Use zfill for better sorting: wail_00, wail_01
-            filename = f"{siren_def.standard}_{mode_name}_{str(i).zfill(2)}.wav".replace(" ", "_").replace("/", "_")
+            # Filename: {mode}_{type}_{waveform}_{iteration:02d}.wav
+            mode_str = params['mode'].value if hasattr(params['mode'], 'value') else str(params['mode'])
+            type_str = params['type'].value if hasattr(params['type'], 'value') else str(params['type'])
+            waveform_str = params['waveform'].value if hasattr(params['waveform'], 'value') else str(params['waveform'])
+            filename = f"{mode_str}_{type_str}_{waveform_str}_{str(i).zfill(2)}.wav"
             filepath = samples_dir / filename
             
             # Save Audio

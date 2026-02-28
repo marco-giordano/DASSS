@@ -103,6 +103,11 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
         # 5. Sample Waveform
         waveform_choice = random.choice(params.waveform) if isinstance(params.waveform, list) else params.waveform
         
+        # 6. Sample Tone Pattern (pick randomly per iteration if a list is given)
+        tone_pattern_choice = (
+            random.choice(params.tone_pattern) if isinstance(params.tone_pattern, list) else params.tone_pattern
+        )
+        
         # If we get here, valid
         return {
             "frequency_min": f_min,
@@ -115,7 +120,7 @@ def sample_parameters(params: SirenModeParams, min_separation: float = 1.0) -> D
             "mode": params.mode,
             "mechanical_profile": params.mechanical_profile,
             "variable_wail": params.variable_wail,
-            "tone_pattern": params.tone_pattern
+            "tone_pattern": tone_pattern_choice
         }
     
     # Fallback to defaults if sampling fails

@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Dict, Optional, Union, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 class Waveform(str, Enum):
     SINE = "sine"
@@ -43,6 +43,26 @@ class NominalFrequencies(BaseModel):
     min: float
     max: float
 
+# Mapping of valid (type, mode) pairs, grounded in acoustics and regulatory standards.
+# key = SirenType, value = set of valid SirenModeEnum values.
+_VALID_TYPE_MODE: Dict[str, set] = {
+    SirenType.ELECTRONIC: {
+        SirenModeEnum.WAIL,
+        SirenModeEnum.YELP,
+        SirenModeEnum.PHASER,
+        SirenModeEnum.PIERCER,
+        SirenModeEnum.HI_LO,
+        SirenModeEnum.RUMBLER,
+    },
+    SirenType.MECHANICAL: {
+        SirenModeEnum.WAIL,
+    },
+    SirenType.PNEUMATIC: {
+        SirenModeEnum.TWO_TONE,
+        SirenModeEnum.HI_LO,   # accepted as extended use (two distinct pipe tones)
+    },
+}
+
 class SirenModeParams(BaseModel):
     type: SirenType = Field(..., description="Type of siren generation")
     mode: SirenModeEnum = Field(..., description="Mode category")
@@ -59,9 +79,21 @@ class SirenModeParams(BaseModel):
     # Specific options
     mechanical_profile: Optional[MechanicalProfile] = Field(None, description="Envelope settings for mechanical/pneumatic types")
     variable_wail: Optional[VariableWailConfig] = Field(None, description="Variable wail randomization settings")
-    tone_pattern: Optional[str] = Field(None, description="6-character string for duty cycle pattern (e.g. 'hhhlll')")
+    tone_pattern: Optional[Union[str, List[str]]] = Field(None, description="6-character pattern string or list of patterns to pick randomly per iteration (e.g. ['hlhlll', 'hhhlll'])")
     
     description: Optional[str] = "User defined siren mode"
+
+    @model_validator(mode='after')
+    def check_type_mode_compatibility(self) -> 'SirenModeParams':
+        """Reject (type, mode) combinations that have no acoustic or regulatory basis."""
+        allowed_modes = _VALID_TYPE_MODE.get(self.type, set())
+        if self.mode not in allowed_modes:
+            raise ValueError(
+                f"Invalid combination: type='{self.type.value}' does not support mode='{self.mode.value}'. "
+                f"Allowed modes for '{self.type.value}': "
+                f"{[m.value for m in allowed_modes]}."
+            )
+        return self
 
 class SirenDefinition(BaseModel):
     standard: str = Field(..., description="Name of the standard (e.g., SAE J1849) or 'User-Defined'")

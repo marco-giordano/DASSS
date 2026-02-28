@@ -1,0 +1,677 @@
+{
+    "standard": "DASSS Validated Combinations",
+    "region": "User-Defined",
+    "seed": 42,
+    "modes": {
+        "01_electronic_wail_sine": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Electronic wail - sine carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        },
+        "02_electronic_wail_square": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Electronic wail - square carrier (SAE J1849)",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "03_electronic_wail_sawtooth": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Electronic wail - sawtooth carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "04_electronic_wail_triangle": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Electronic wail - triangle carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "05_electronic_wail_trapezoid": {
+            "type": "electronic",
+            "mode": "wail",
+            "description": "Electronic wail - trapezoid carrier (SAE J1849)",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 5.0
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5
+        },
+        "06_electronic_yelp_sine": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Electronic yelp - sine carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.24,
+                "max": 0.40
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        },
+        "07_electronic_yelp_square": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Electronic yelp - square carrier (SAE J1849)",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.24,
+                "max": 0.40
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "08_electronic_yelp_sawtooth": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Electronic yelp - sawtooth carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.24,
+                "max": 0.40
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "09_electronic_yelp_triangle": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Electronic yelp - triangle carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.24,
+                "max": 0.40
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "10_electronic_yelp_trapezoid": {
+            "type": "electronic",
+            "mode": "yelp",
+            "description": "Electronic yelp - trapezoid carrier",
+            "frequency_range": {
+                "min": 500.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.24,
+                "max": 0.40
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5
+        },
+        "11_electronic_phaser_sine": {
+            "type": "electronic",
+            "mode": "phaser",
+            "description": "Electronic phaser - sine carrier",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.10,
+                "max": 0.20
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        },
+        "12_electronic_phaser_square": {
+            "type": "electronic",
+            "mode": "phaser",
+            "description": "Electronic phaser - square carrier",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.10,
+                "max": 0.20
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "13_electronic_phaser_sawtooth": {
+            "type": "electronic",
+            "mode": "phaser",
+            "description": "Electronic phaser - sawtooth carrier",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.10,
+                "max": 0.20
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "14_electronic_phaser_triangle": {
+            "type": "electronic",
+            "mode": "phaser",
+            "description": "Electronic phaser - triangle carrier",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.10,
+                "max": 0.20
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "15_electronic_phaser_trapezoid": {
+            "type": "electronic",
+            "mode": "phaser",
+            "description": "Electronic phaser - trapezoid carrier",
+            "frequency_range": {
+                "min": 600.0,
+                "max": 1600.0
+            },
+            "period_range": {
+                "min": 0.10,
+                "max": 0.20
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5
+        },
+        "16_electronic_piercer_sine": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Electronic piercer - sine carrier",
+            "frequency_range": {
+                "min": 700.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.05,
+                "max": 0.08
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        },
+        "17_electronic_piercer_square": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Electronic piercer - square carrier",
+            "frequency_range": {
+                "min": 700.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.05,
+                "max": 0.08
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "18_electronic_piercer_sawtooth": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Electronic piercer - sawtooth carrier",
+            "frequency_range": {
+                "min": 700.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.05,
+                "max": 0.08
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "19_electronic_piercer_triangle": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Electronic piercer - triangle carrier",
+            "frequency_range": {
+                "min": 700.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.05,
+                "max": 0.08
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "20_electronic_piercer_trapezoid": {
+            "type": "electronic",
+            "mode": "piercer",
+            "description": "Electronic piercer - trapezoid carrier",
+            "frequency_range": {
+                "min": 700.0,
+                "max": 1700.0
+            },
+            "period_range": {
+                "min": 0.05,
+                "max": 0.08
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5
+        },
+        "21_electronic_hi-lo_sine": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Electronic hi-lo (CEN 1789) - sine carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 700.0
+            },
+            "period_range": {
+                "min": 0.67,
+                "max": 1.00
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        },
+        "22_electronic_hi-lo_square": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Electronic hi-lo (CEN 1789) - square carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 700.0
+            },
+            "period_range": {
+                "min": 0.67,
+                "max": 1.00
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "23_electronic_hi-lo_sawtooth": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Electronic hi-lo (CEN 1789) - sawtooth carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 700.0
+            },
+            "period_range": {
+                "min": 0.67,
+                "max": 1.00
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "24_electronic_hi-lo_triangle": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Electronic hi-lo (CEN 1789) - triangle carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 700.0
+            },
+            "period_range": {
+                "min": 0.67,
+                "max": 1.00
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "25_electronic_hi-lo_trapezoid": {
+            "type": "electronic",
+            "mode": "hi-lo",
+            "description": "Electronic hi-lo (CEN 1789) - trapezoid carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 700.0
+            },
+            "period_range": {
+                "min": 0.67,
+                "max": 1.00
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5
+        },
+        "26_electronic_rumbler_sine": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Electronic rumbler sub-harmonic - sine carrier",
+            "frequency_range": {
+                "min": 125.0,
+                "max": 400.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 6.0
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5
+        },
+        "27_electronic_rumbler_square": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Electronic rumbler sub-harmonic - square carrier (SAE J1849 Rumbler)",
+            "frequency_range": {
+                "min": 125.0,
+                "max": 400.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 6.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5
+        },
+        "28_electronic_rumbler_sawtooth": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Electronic rumbler sub-harmonic - sawtooth carrier",
+            "frequency_range": {
+                "min": 125.0,
+                "max": 400.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 6.0
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5
+        },
+        "29_electronic_rumbler_triangle": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Electronic rumbler sub-harmonic - triangle carrier",
+            "frequency_range": {
+                "min": 125.0,
+                "max": 400.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 6.0
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5
+        },
+        "30_electronic_rumbler_trapezoid": {
+            "type": "electronic",
+            "mode": "rumbler",
+            "description": "Electronic rumbler sub-harmonic - trapezoid carrier",
+            "frequency_range": {
+                "min": 125.0,
+                "max": 400.0
+            },
+            "period_range": {
+                "min": 3.0,
+                "max": 6.0
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5
+        },
+        "31_mechanical_wail_sine": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical rotor wail - sine carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.3
+            }
+        },
+        "32_mechanical_wail_square": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical rotor wail - square carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.3
+            }
+        },
+        "33_mechanical_wail_sawtooth": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical rotor wail - sawtooth carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.3
+            }
+        },
+        "34_mechanical_wail_triangle": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical rotor wail - triangle carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.3
+            }
+        },
+        "35_mechanical_wail_trapezoid": {
+            "type": "mechanical",
+            "mode": "wail",
+            "description": "Mechanical rotor wail - trapezoid carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 4.0,
+                "max": 8.0
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5,
+            "mechanical_profile": {
+                "rise_ratio": 0.2,
+                "rise_exponent": 0.5,
+                "fall_exponent": 2.5
+            },
+            "variable_wail": {
+                "enabled": true,
+                "variation_magnitude": 0.3
+            }
+        },
+        "36_pneumatic_two-tone_sine": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Pneumatic Martin horn two-tone - sine carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "sine",
+            "duty_cycle": 0.5,
+            "tone_pattern": [
+                "hlhlll",
+                "hlhhll",
+                "hhhlll"
+            ]
+        },
+        "37_pneumatic_two-tone_square": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Pneumatic Martin horn two-tone - square carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "square",
+            "duty_cycle": 0.5,
+            "tone_pattern": [
+                "hlhlll",
+                "hlhhll",
+                "hhhlll"
+            ]
+        },
+        "38_pneumatic_two-tone_sawtooth": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Pneumatic Martin horn two-tone - sawtooth carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "sawtooth",
+            "duty_cycle": 0.5,
+            "tone_pattern": [
+                "hlhlll",
+                "hlhhll",
+                "hhhlll"
+            ]
+        },
+        "39_pneumatic_two-tone_triangle": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Pneumatic Martin horn two-tone - triangle carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "triangle",
+            "duty_cycle": 0.5,
+            "tone_pattern": [
+                "hlhlll",
+                "hlhhll",
+                "hhhlll"
+            ]
+        },
+        "40_pneumatic_two-tone_trapezoid": {
+            "type": "pneumatic",
+            "mode": "two-tone",
+            "description": "Pneumatic Martin horn two-tone - trapezoid carrier",
+            "frequency_range": {
+                "min": 400.0,
+                "max": 1200.0
+            },
+            "period_range": {
+                "min": 0.8,
+                "max": 1.2
+            },
+            "waveform": "trapezoid",
+            "duty_cycle": 0.5,
+            "tone_pattern": [
+                "hlhlll",
+                "hlhhll",
+                "hhhlll"
+            ]
+        }
+    }
+}

@@ -1,6 +1,6 @@
 {
     "standard": "Patterns for Dataset Generation",
-    "region": "GUser-Defined",
+    "region": "User-Defined",
     "seed": 42,
     "modes": {
         "1_electronic_wail": {
