@@ -96,6 +96,48 @@ Detailed documentation is available in the `docs/` directory:
 
 ---
 
+## 🤝 Contributing & Authentication
+
+To contribute to this repository (fork, clone over HTTPS, or push changes), GitHub requires authentication via a **Personal Access Token (PAT)**.
+
+### Creating a Personal Access Token
+
+1. Sign in to [github.com](https://github.com) and click your profile picture → **Settings**.
+2. In the left sidebar, click **Developer settings** → **Personal access tokens** → **Tokens (classic)**.
+3. Click **Generate new token (classic)**.
+4. Give the token a descriptive **Note** (e.g., `DASSS dev`).
+5. Set an **Expiration** date (e.g., 90 days).
+6. Under **Select scopes**, check at least:
+   - `repo` – full access to public/private repositories
+7. Click **Generate token** and **copy it immediately** (you won't be able to see it again).
+
+### Using Your Token
+
+When Git prompts for a password (e.g., during `git clone` or `git push`), paste your PAT instead of your GitHub account password:
+
+```bash
+git clone https://github.com/marco-giordano/DASSS.git
+# Username: your-github-username
+# Password: <paste your PAT here>
+```
+
+To avoid re-entering it every time, cache it with Git's credential helper:
+
+```bash
+# macOS – store in Keychain (secure)
+git config --global credential.helper osxkeychain
+
+# Windows – Git Credential Manager (installed with Git for Windows)
+git config --global credential.helper manager
+
+# Linux – cache in memory for 1 hour (no disk storage)
+git config --global credential.helper 'cache --timeout=3600'
+```
+
+> **Security note**: treat your PAT like a password. Never commit it to source control or share it publicly.
+
+---
+
 ## 📄 License
 
 [MIT License](LICENSE) (or correct license if applicable)
