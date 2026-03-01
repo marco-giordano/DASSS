@@ -176,7 +176,58 @@ def main():
     
     end_time = time.time()
     import datetime
+    from collections import Counter
     total_time_str = str(datetime.timedelta(seconds=int(end_time - start_time)))
+
+    # --- Dataset Summary ---
+    n = len(metadata_list)
+    total_duration_s = sum(m.duration_s for m in metadata_list)
+    total_duration_h = total_duration_s / 3600.0
+
+    mode_counts     = Counter(m.mode     for m in metadata_list)
+    type_counts     = Counter(m.type     for m in metadata_list)
+    waveform_counts = Counter(m.waveform for m in metadata_list)
+
+    def _table(counter, total, label):
+        lines = [f"  {'Class':<22} {'Count':>6}  {'%':>6}", "  " + "-" * 38]
+        for key, cnt in sorted(counter.items(), key=lambda x: -x[1]):
+            lines.append(f"  {key:<22} {cnt:>6}  {cnt/total*100:>5.1f}%")
+        lines.append(f"  {'TOTAL':<22} {total:>6}  100.0%")
+        return "\n".join(lines)
+
+    summary_lines = [
+        "=" * 50,
+        "DASSS Dataset Summary",
+        "=" * 50,
+        f"Generated      : {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        f"Definition     : {batch_config.definition_file}",
+        f"Output dir     : {batch_config.output_dir}",
+        f"Sample rate    : {batch_config.sample_rate} Hz",
+        f"Bit depth      : {batch_config.bit_depth} bit",
+        f"Oversampling   : {batch_config.oversampling}x",
+        f"Iterations/mode: {batch_config.num_iterations}",
+        f"Duration/sample: {batch_config.duration_s} s",
+        "",
+        f"Total samples  : {n}",
+        f"Total audio    : {total_duration_s:.1f} s  ({total_duration_h:.3f} h)",
+        f"Generation time: {total_time_str}",
+        "",
+        "--- Siren Mode (class balance) ---",
+        _table(mode_counts, n, "mode"),
+        "",
+        "--- Siren Type ---",
+        _table(type_counts, n, "type"),
+        "",
+        "--- Waveform ---",
+        _table(waveform_counts, n, "waveform"),
+        "=" * 50,
+    ]
+
+    summary_text = "\n".join(summary_lines) + "\n"
+    summary_path = output_dir / "dataset_summary.txt"
+    summary_path.write_text(summary_text)
+    print(summary_text)
+
     print(f"Batch generation complete in {total_time_str}. Output in {output_dir}")
 
 if __name__ == "__main__":
