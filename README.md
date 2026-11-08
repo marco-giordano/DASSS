@@ -98,4 +98,4 @@ Detailed documentation is available in the `docs/` directory:
 
 ## 📄 License
 
-[MIT License](LICENSE) (or correct license if applicable)
+[MIT License]
