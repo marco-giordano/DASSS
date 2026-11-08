@@ -21,3 +21,11 @@ realism:
   oscillator_jitter: true # Enable simulated voltage drift
   mechanical_asymmetry: true # Enable asymmetric envelope for mechanical sirens
   jitter_amount: 0.3             # Drift intensity (0.0-1.0) — scale is now ×10 Hz, so 0.3 = ~3 Hz std dev
+
+# Spectrogram plot settings (font sizes in points)
+spectrogram:
+  title_fontsize: 18        # Plot title
+  axis_label_fontsize: 16   # X/Y axis labels ("Time [sec]" / "Frequency [Hz]")
+  tick_fontsize: 14         # Axis tick labels
+  colorbar_fontsize: 14     # Colorbar label ("Intensity [dB]")
+  figure_dpi: 300           # Output image resolution in DPI (e.g. 72=screen, 150=default, 300=print)

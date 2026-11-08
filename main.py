@@ -145,10 +145,11 @@ def main():
                 spec_filename = f"{filename}.png"
                 spec_path = spectrogram_dir / spec_filename
                 save_spectrogram(
-                    audio_data=audio, 
-                    sample_rate=batch_config.sample_rate, 
+                    audio_data=audio,
+                    sample_rate=batch_config.sample_rate,
                     output_path=str(spec_path),
-                    title=f"{mode_name} - {filename}"
+                    title=f"{mode_name} - {filename}",
+                    spectrogram_config=batch_config.spectrogram,
                 )
             
             # Add to Metadata

@@ -112,6 +112,13 @@ class RealismConfig(BaseModel):
     horn_filter: bool = Field(True, description="Enable speaker frequency response simulation")
     mechanical_asymmetry: bool = Field(True, description="Global enable for asymmetric envelope (overrides per-mode if False)")
 
+class SpectrogramConfig(BaseModel):
+    title_fontsize: int = Field(14, description="Font size for the spectrogram plot title")
+    axis_label_fontsize: int = Field(12, description="Font size for X/Y axis labels")
+    tick_fontsize: int = Field(10, description="Font size for axis tick labels")
+    colorbar_fontsize: int = Field(10, description="Font size for the colorbar label")
+    figure_dpi: int = Field(150, description="Resolution of the saved spectrogram image in DPI")
+
 class BatchConfig(BaseModel):
     definition_file: str = Field(..., description="Path to the siren definition JSON file")
     output_dir: str = Field("./output", description="Directory to save generated samples")
@@ -130,6 +137,9 @@ class BatchConfig(BaseModel):
     
     # Realism Settings
     realism: RealismConfig = Field(default_factory=RealismConfig, description="Algorithmic realism settings")
+    
+    # Spectrogram plot settings
+    spectrogram: SpectrogramConfig = Field(default_factory=SpectrogramConfig, description="Font-size settings for spectrogram plots")
     
     # Global overrides or settings
     seed: Optional[int] = None
